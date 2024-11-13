@@ -78,6 +78,8 @@ WSGI_APPLICATION = 'image_optimizer.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
+    'default':{
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'hossein',
         'USER': 'postgres',
         'PASSWORD':'hossein82431',
