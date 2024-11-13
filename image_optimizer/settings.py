@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-+1__%tl917pru66z=(xe^gpoex3woh8+hji1h#ozg-3g-%3s^f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['Hosein2003.pythonanywhere.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost' ,'172.105.38.184']
 
 
 # Application definition
@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'optimizer'
+    'rest_framework',
+
 ]
 
 MIDDLEWARE = [
@@ -76,9 +78,12 @@ WSGI_APPLICATION = 'image_optimizer.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'hossein',
+        'USER': 'postgres',
+        'PASSWORD':'hossein82431',
+        'HOST': '172.105.38.184',
+        'PORT': '5432',
     }
 }
 
