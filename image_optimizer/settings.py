@@ -80,8 +80,8 @@ WSGI_APPLICATION = 'image_optimizer.wsgi.application'
 DATABASES = {
     'default':{
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'hossein',
-        'USER': 'postgres',
+        'NAME': 'postgres',
+        'USER': 'hossein',
         'PASSWORD':'hossein82431',
         'HOST': '172.105.38.184',
         'PORT': '5432',
