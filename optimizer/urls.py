@@ -3,5 +3,5 @@ from .views import optimize_image
 
 
 urlpatterns = [
-    path('optimize/', optimize_image, name='optimize_image')
+path('optimize/', optimize_image, name='optimize_image'),
 ]
