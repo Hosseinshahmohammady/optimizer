@@ -2,6 +2,9 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
+RUN pip install wait-for-it
+
+
 COPY requirements.txt /app/
 
 RUN apt-get update && apt-get install -y libpq-dev
