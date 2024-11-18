@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # سرویس PostgreSQL
+  db:
+    image: postgres:13  # استفاده از تصویر رسمی PostgreSQL
+    environment:
+      POSTGRES_DB: postgres  # نام دیتابیس
+      POSTGRES_USER: postgres  # نام کاربری دیتابیس
+      POSTGRES_PASSWORD: b9?egXS.Ksj8#%1qa-1yP  # رمزعبور دیتابیس
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # ذخیره داده‌ها در یک volume
+    ports:
+      - "5432:5432"  # پورت 5432 دیتابیس
+
+  # سرویس Django
+  web:
+    build: .  # ساخت از Dockerfile موجود
+    command: python manage.py runserver 0.0.0.0:8000  # اجرای پروژه Django
+    volumes:
+      - .:/app  # برای سینک کردن تغییرات بین سیستم محلی و کانتینر
+    ports:
+      - "8000:8000"  # پورت 8000 برای دسترسی به وب‌سایت
+    depends_on:
+      - db  # سرویس Django به سرویس PostgreSQL وابسته است
+    environment:
+      - DATABASE_HOST=db  # اینجا به نام سرویس db اشاره می‌کنیم
+      - DATABASE_PORT=5432  # پورت PostgreSQL
+
+volumes:
+  postgres_data:  # ایجاد volume برای PostgreSQL
