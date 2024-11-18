@@ -4,6 +4,9 @@ WORKDIR /app
 
 RUN pip install wait-for-it
 
+# نصب wait-for-it
+RUN apt-get update && apt-get install -y wait-for-it
+
 
 COPY requirements.txt /app/
 
