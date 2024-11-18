@@ -42,6 +42,10 @@ INSTALLED_APPS = [
 
     'optimizer',
     'rest_framework',
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8bcdc940db686e317386f932bd408fbabe7969f8
 ]
 
 MIDDLEWARE = [
@@ -78,6 +82,7 @@ WSGI_APPLICATION = 'image_optimizer.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+<<<<<<< HEAD
 DATABASES = {     
     'default':
      {
@@ -93,6 +98,18 @@ DATABASES = {
         }
 
 
+=======
+DATABASES = {
+    'default':{
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD':'b9?egXS.Ksj8#%1qa-1yP',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+>>>>>>> 8bcdc940db686e317386f932bd408fbabe7969f8
 
 
 # Password validation
