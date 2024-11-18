@@ -28,6 +28,3 @@ services:
 
 volumes:
   postgres_data:  
-
-
-command: ["wait-for-it", "db:5432", "--", "python", "manage.py", "migrate"]
