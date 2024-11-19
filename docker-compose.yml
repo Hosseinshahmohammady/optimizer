@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: b9?egXS.Ksj8#%1qa-1yP 
       restart: always 
       healthcheck:
-      test: ['CMD-SHELL', 'pg-isready -U postgres']
+      # test: ['CMD-SHELL', 'pg-isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,10 +32,10 @@ services:
     depends_on:
       - db  
     environment:
-    - SECRET_KEY=test
-    - DEBUG=True
-      # - DATABASE_HOST=db  
-      # - DATABASE_PORT=5432  
+    # - SECRET_KEY=test
+    # - DEBUG=True
+      - DATABASE_HOST=db  
+      - DATABASE_PORT=5432  
     restart: alwayes
 volumes:
   postgres_data:  
