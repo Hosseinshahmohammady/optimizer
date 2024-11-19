@@ -4,7 +4,7 @@ LABEL maintainer="hoseinshahmohammady@gmail.com"
 
 ENV PYTHONUNBUFFERED=1
 
-WORKDIR /src/usr/app
+WORKDIR /app
 
 # RUN pip install wait-for-it
 
@@ -26,8 +26,10 @@ RUN pip install --upgrade pip && pip3 install -r requirements.txt
 
 COPY . /app/
 
-# RUN python manage.py migrate
+RUN python manage.py migrate
 
 EXPOSE 8000
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+RUN apt-get update && apt-get install -y wait-for-it
+
+CMD ["sh", "-c", "/app/wait-for-it.sh db:5432 -- python manage.py runserver 0.0.0.0:8000"]
