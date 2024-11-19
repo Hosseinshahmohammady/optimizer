@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,12 +23,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-+1__%tl917pru66z=(xe^gpoex3woh8+hji1h#ozg-3g-%3s^f'
+SECRET_KEY = config("SECRET_KEY", default="test")
+
+# 'django-insecure-+1__%tl917pru66z=(xe^gpoex3woh8+hji1h#ozg-3g-%3s^f'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = config("DEBUG", cast=bool, default=True)
 
-ALLOWED_HOSTS = ['172.105.38.184']
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS",
+    cast=lambda v: [s.strip() for s in v.split(",")],
+    default ="*",
+)
+
+# ['172.105.38.184']
 
 
 # Application definition
@@ -83,12 +92,12 @@ WSGI_APPLICATION = 'image_optimizer.wsgi.application'
 DATABASES = {     
     'default':
      {
-        'ENGINE': 'django.db.backends.postgresql',         
-        'NAME': 'postgres',         
-        'USER': 'postgres',         
-        'PASSWORD':'b9?egXS.Ksj8#%1qa-1yP',         
-        'HOST': 'db',         
-        'PORT': '5432',    
+        'ENGINE': config("DB_ENGINE", default='django.db.backends.postgresql'),         
+        'NAME': config("DB_NAME", default='postgres'),         
+        'USER': config("DB_USER", default='postgres'),         
+        'PASSWORD':config("DB_PASS", default='b9?egXS.Ksj8#%1qa-1yP'),         
+        'HOST': config("DB_HOST", default='db'),         
+        'PORT': config("DB_PORT", cast=int, default='5432'),    
         
     } 
          

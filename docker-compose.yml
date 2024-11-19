@@ -1,21 +1,30 @@
-version: '3.8'
+version: '3.9'
 
 services:
   db:
+    container_name: db
     image: postgres:13  
     environment:
       POSTGRES_DB: postgres  
       POSTGRES_USER: postgres  
-      POSTGRES_PASSWORD: b9?egXS.Ksj8#%1qa-1yP  
+      POSTGRES_PASSWORD: b9?egXS.Ksj8#%1qa-1yP 
+      restart: always 
+      healthcheck:
+      test: ['CMD-SHELL', 'pg-isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
-      - postgres_data:/var/lib/postgresql/data 
+      - ./postgres/data:/var/lib/postgresql/data 
     ports:
       - "5432:5432"  
 
   
-  web:
-    build: .  
-    command: python manage.py runserver 0.0.0.0:8000  
+  backend:
+    build:
+    context: .
+    dockerfile: dockerfiles/dev/django/Dockerfile  
+    command: sh -c "python manage.py makemigrations && pyhon manage.py migrate && python manage.py runserver 0.0.0.0:8000"  
     volumes:
       - .:/app  
     ports:
@@ -23,9 +32,11 @@ services:
     depends_on:
       - db  
     environment:
-      - DATABASE_HOST=db  
-      - DATABASE_PORT=5432  
-
+    - SECRET_KEY=test
+    - DEBUG=True
+      # - DATABASE_HOST=db  
+      # - DATABASE_PORT=5432  
+    restart: alwayes
 volumes:
   postgres_data:  
 
