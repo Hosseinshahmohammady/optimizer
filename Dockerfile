@@ -26,7 +26,7 @@ RUN pip install --upgrade pip && pip3 install -r requirements.txt
 
 COPY . /app/
 
-RUN python manage.py migrate
+# RUN python manage.py migrate
 
 EXPOSE 8000
 
