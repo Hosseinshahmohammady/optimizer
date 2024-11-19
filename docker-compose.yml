@@ -3,40 +3,41 @@ version: '3.9'
 services:
   db:
     container_name: db
-    image: postgres:13  
+    image: postgres:13
     environment:
-      POSTGRES_DB: postgres  
-      POSTGRES_USER: postgres  
-      POSTGRES_PASSWORD: b9?egXS.Ksj8#%1qa-1yP 
-      restart: always 
-      healthcheck:
-      # test: ['CMD-SHELL', 'pg-isready -U postgres']
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: b9?egXS.Ksj8#%1qa-1yP
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg-isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
     volumes:
-      - ./postgres/data:/var/lib/postgresql/data 
+      - ./postgres/data:/var/lib/postgresql/data  # اگر می‌خواهید داده‌ها به صورت محلی ذخیره شوند
     ports:
-      - "5432:5432"  
+      - "5432:5432"
 
-  
   backend:
-    build:.
-    # dockerfile: dockerfiles/dev/django/Dockerfile  
-    command: sh -c "python manage.py makemigrations && pyhon manage.py migrate && python manage.py runserver 0.0.0.0:8000"  
+    build: .
+    # اگر فایل Dockerfile خاصی دارید، آن را به طور خاص اعلام کنید:
+    # dockerfile: dockerfiles/dev/django/Dockerfile
+    command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - .:/app  
+      - .:/app
     ports:
-      - "8000:8000"  
+      - "8000:8000"
     depends_on:
-      - db  
+      - db
     environment:
-    # - SECRET_KEY=test
-    # - DEBUG=True
-      - DATABASE_HOST=db  
-      - DATABASE_PORT=5432  
-    restart: alwayes
+      # اگر تنظیمات محیطی نیاز دارید، اینجا می‌توانید اضافه کنید
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+    restart: always
+
 volumes:
-  postgres_data:  
+  postgres_data:
+
 
 
