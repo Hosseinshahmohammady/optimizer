@@ -5,6 +5,8 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import MultiPartParser
 from PIL import Image
 import io
+import os
+from django.conf import settings
 
 
 
@@ -16,13 +18,33 @@ def optimize_image(request):
     
      image = Image.open(file)
 
-     output = io.BytesIO()
-     image.save(output, format='JPEG', quality = 85)
-     output.seek(0)
+
+     media_path = settings.MEDIA_ROOT
+     if not os.path.exists(media_path):
+        os.makedirs(media_path)
+
+
+     file_name = 'optimized_image.jpg'
+     file_path = os.path.join(media_path, file_name)
+
+     image.save(file_path, format='JPEG', quality=85)
+
+     image_url = os.path.join(settings.MEDIA_URL, file_name)
+
 
      return JsonResponse({
+        'message': 'Image optimized and saved',
+        'image_url': image_url
+        })
+
+
+     # output = io.BytesIO()
+     # image.save(output, format='JPEG', quality = 85)
+     # output.seek(0)
+
+     # return JsonResponse({
         
-             'message': 'image optimized',
-              'image': output.getvalue().hex()
+     #         'message': 'image optimized',
+     #          'image': output.getvalue().hex()
               
-              })
+     #          })
