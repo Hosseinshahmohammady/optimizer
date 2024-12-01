@@ -64,7 +64,7 @@ def show_image(request, pk):
     
 
 
-def get_image_url_by_id(request, pk):
+def image_id(request, pk):
 
     file_name = f'id={pk}.jpg'
     file_path = os.path.join(settings.MEDIA_ROOT, file_name)
@@ -76,5 +76,5 @@ def get_image_url_by_id(request, pk):
 
     return JsonResponse({
         'message': 'Image found',
-        'image_url': image_url
+        'image_url': image_url,
     })
