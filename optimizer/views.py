@@ -46,8 +46,9 @@ def optimize_image(request):
      return JsonResponse({
         'message': 'Image optimized and saved',
         'image_url': image_url,
-        # 'short_url': short_url
-        })
+        # 'short_url': short_url,
+        'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
+        }) 
 
 
      
