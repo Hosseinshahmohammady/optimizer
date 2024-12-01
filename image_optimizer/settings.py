@@ -159,3 +159,5 @@ import os
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MEDIA_URL = '/media/'
+
+SITE_URL = 'http://172.105.38.184:8000'

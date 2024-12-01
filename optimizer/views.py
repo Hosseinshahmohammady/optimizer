@@ -16,6 +16,15 @@ def optimize_image(request):
      file = request.FILES.get('image')
      if not file :
           return JsonResponse({'error': 'No image provided'}, status= 400)
+     
+     quality = request.data.get('quality', 85)
+
+     try:
+        quality = int(quality)
+        if quality < 1 or quality > 100:
+            return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+     except ValueError:
+        return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
     
      image = Image.open(file)
 
@@ -26,23 +35,25 @@ def optimize_image(request):
      existing_files = os.listdir(media_path)
      pk = len(existing_files) + 1
 
-     file_name = f'{pk}.jpg'
+     file_name = f'id={pk}.jpg'
      file_path = os.path.join(media_path, file_name)
 
-     image.save(file_path, format='JPEG', quality=85)
+     image.save(file_path, format='JPEG', quality=quality)
 
      image_url = os.path.join(settings.MEDIA_URL, file_name)
+     short_url = f"{settings.SITE_URL}/image/{pk}"
 
      return JsonResponse({
         'message': 'Image optimized and saved',
-        'image_url': image_url
+        'image_url': image_url,
+        'short_url': short_url
         })
 
 
      
 def show_image(request, pk):
     
-    file_name = f'{pk}.jpg'
+    file_name = f'id={pk}.jpg'
     file_path = os.path.join(settings.MEDIA_ROOT, file_name)
 
     if not os.path.exists(file_path):
