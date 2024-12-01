@@ -41,12 +41,12 @@ def optimize_image(request):
      image.save(file_path, format='JPEG', quality=quality)
 
      image_url = os.path.join(settings.MEDIA_URL, file_name)
-     short_url = f"{settings.SITE_URL}/image/{pk}"
+    #  short_url = f"{settings.SITE_URL}/image/{pk}"
 
      return JsonResponse({
         'message': 'Image optimized and saved',
         'image_url': image_url,
-        'short_url': short_url
+        # 'short_url': short_url
         })
 
 
@@ -61,3 +61,20 @@ def show_image(request, pk):
     
     with open(file_path, 'rb') as image_file:
         return HttpResponse(image_file.read(), content_type="image/jpeg")
+    
+
+
+def get_image_url_by_id(request, pk):
+
+    file_name = f'id={pk}.jpg'
+    file_path = os.path.join(settings.MEDIA_ROOT, file_name)
+
+    if not os.path.exists(file_path):
+        return JsonResponse({'error': 'Image not found'}, status=404)
+    
+    image_url = os.path.join(settings.MEDIA_URL, file_name)
+
+    return JsonResponse({
+        'message': 'Image found',
+        'image_url': image_url
+    })
