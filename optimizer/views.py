@@ -1,8 +1,9 @@
 from django.shortcuts import render
-
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.parsers import MultiPartParser
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from PIL import Image
 import io
 import os
@@ -18,19 +19,19 @@ def optimize_image(request):
     
      image = Image.open(file)
 
-
      media_path = settings.MEDIA_ROOT
      if not os.path.exists(media_path):
         os.makedirs(media_path)
 
+     existing_files = os.listdir(media_path)
+     image_number = len(existing_files) + 1
 
-     file_name = 'optimized_image.jpg'
+     file_name = f'optimized_image_{image_number}.jpg'
      file_path = os.path.join(media_path, file_name)
 
      image.save(file_path, format='JPEG', quality=85)
 
      image_url = os.path.join(settings.MEDIA_URL, file_name)
-
 
      return JsonResponse({
         'message': 'Image optimized and saved',
@@ -38,13 +39,14 @@ def optimize_image(request):
         })
 
 
-     # output = io.BytesIO()
-     # image.save(output, format='JPEG', quality = 85)
-     # output.seek(0)
+     
+def show_image(request, image_number):
+    
+    file_name = f'optimized_image_{image_number}.jpg'
+    file_path = os.path.join(settings.MEDIA_ROOT, file_name)
 
-     # return JsonResponse({
-        
-     #         'message': 'image optimized',
-     #          'image': output.getvalue().hex()
-              
-     #          })
+    if not os.path.exists(file_path):
+        return HttpResponse("Image not found", status=404)
+    
+    with open(file_path, 'rb') as image_file:
+        return HttpResponse(image_file.read(), content_type="image/jpeg")
