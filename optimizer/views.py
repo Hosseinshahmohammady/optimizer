@@ -24,9 +24,9 @@ def optimize_image(request):
         os.makedirs(media_path)
 
      existing_files = os.listdir(media_path)
-     image_number = len(existing_files) + 1
+     pk = len(existing_files) + 1
 
-     file_name = f'optimized_image_{image_number}.jpg'
+     file_name = f'{pk}.jpg'
      file_path = os.path.join(media_path, file_name)
 
      image.save(file_path, format='JPEG', quality=85)
@@ -40,9 +40,9 @@ def optimize_image(request):
 
 
      
-def show_image(request, image_number):
+def show_image(request, pk):
     
-    file_name = f'optimized_image_{image_number}.jpg'
+    file_name = f'{pk}.jpg'
     file_path = os.path.join(settings.MEDIA_ROOT, file_name)
 
     if not os.path.exists(file_path):
