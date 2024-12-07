@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 
 from rest_framework.parsers import MultiPartParser
-from rest_framework.decorators import api_view, parser_classes
+from rest_framework.decorators import parser_classes
 from drf_yasg.utils import swagger_auto_schema
 from .serializers import ImageUploadSerializer
 
@@ -22,16 +22,15 @@ from django.conf import settings
     )
 def optimize_image(request):
      
+    # file = request.FILES.get('image')
+
      serializer = ImageUploadSerializer(data=request.data) 
-
-     # file = request.FILES.get('image')
-
      if serializer.is_valid():
           return JsonResponse({'error': 'No image provided'}, status= 400)
      
      file = serializer.validated_data.get('image')
      if not file:
-        return JsonResponse({'error': 'No image provided'}, status=400)
+        return JsonResponse({'error': 'No image exist'}, status=400)
      
      quality = request.data.get('quality', 85)
 
