@@ -44,5 +44,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('optimizer.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('swagger.yaml', schema_view.without_ui(cache_timeout=0), name='swagger-yaml'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
