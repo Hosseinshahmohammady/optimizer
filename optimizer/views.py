@@ -16,12 +16,15 @@ from django.conf import settings
 
 
 @swagger_auto_schema(request_body=ImageUploadSerializer)
-
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
 def optimize_image(request):
-     file = request.FILES.get('image')
-     if not file :
+     
+     serializer = ImageUploadSerializer(data=request.data) 
+
+     # file = request.FILES.get('image')
+
+     if serializer.is_valid():
           return JsonResponse({'error': 'No image provided'}, status= 400)
      
      quality = request.data.get('quality', 85)
@@ -33,7 +36,7 @@ def optimize_image(request):
      except ValueError:
         return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
     
-     image = Image.open(file)
+     image = Image.open(serializer)
 
      media_path = settings.MEDIA_ROOT
      if not os.path.exists(media_path):
