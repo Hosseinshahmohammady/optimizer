@@ -16,20 +16,13 @@ import os
 from django.conf import settings
 
 # @parser_classes([MultiPartParser])
-# @api_view(['POST'])
+@api_view(['POST'])
 # @swagger_auto_schema(
 #     request_body=ImageUploadSerializer,
 #     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
 #     )
 
-class ImageUploadView(APIView):
-    parser_classes = [MultiPartParser]
-
-    @swagger_auto_schema(request_body=ImageUploadSerializer, responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'})
-    def post(self, request):
-
-
-# def optimize_image(request):
+def optimize_image(request):
      
     # file = request.FILES.get('image')
 
