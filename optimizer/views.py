@@ -1,7 +1,12 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
+
 from rest_framework.parsers import MultiPartParser
+from rest_framework.decorators import api_view, parser_classes
+from drf_yasg.utils import swagger_auto_schema
+from .serializers import ImageUploadSerializer
+
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from PIL import Image
@@ -10,8 +15,10 @@ import os
 from django.conf import settings
 
 
+@swagger_auto_schema(request_body=ImageUploadSerializer)
 
 @api_view(['POST'])
+@parser_classes([MultiPartParser])
 def optimize_image(request):
      file = request.FILES.get('image')
      if not file :
