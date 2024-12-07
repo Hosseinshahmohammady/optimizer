@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import optimize_image
-from . import views
+from .import views
 
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
