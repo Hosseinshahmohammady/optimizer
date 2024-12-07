@@ -20,8 +20,15 @@ from django.conf import settings
 #     request_body=ImageUploadSerializer,
 #     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
 #     )
+
 class ImageUploadView(api_view):
-    def optimize_image(request):
+    parser_classes = [MultiPartParser]
+
+    @swagger_auto_schema(request_body=ImageUploadSerializer, responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'})
+    def post(self, request):
+
+
+# def optimize_image(request):
      
     # file = request.FILES.get('image')
 
