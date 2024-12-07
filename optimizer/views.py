@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 
 from rest_framework.parsers import MultiPartParser
 from rest_framework.decorators import parser_classes
@@ -21,7 +22,7 @@ from django.conf import settings
 #     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
 #     )
 
-class ImageUploadView(api_view):
+class ImageUploadView(APIView):
     parser_classes = [MultiPartParser]
 
     @swagger_auto_schema(request_body=ImageUploadSerializer, responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'})
