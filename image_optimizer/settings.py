@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 
     'optimizer',
     'rest_framework',
+    'drf_yasg',
 
 
 ]
