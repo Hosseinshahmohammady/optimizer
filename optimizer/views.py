@@ -67,7 +67,8 @@ def optimize_image(request):
         }) 
 
 
-     
+@api_view(['GET'])
+@swagger_auto_schema(responses={200: 'Image found', 404: 'Image not found'})     
 def show_image(request, pk):
     
     file_name = f'id={pk}.jpg'
@@ -80,7 +81,8 @@ def show_image(request, pk):
         return HttpResponse(image_file.read(), content_type="image/jpeg")
     
 
-
+@api_view(['GET'])
+@swagger_auto_schema(responses={200: 'Image found', 404: 'Image not found'})
 def image_id(request, pk):
 
     file_name = f'id={pk}.jpg'
