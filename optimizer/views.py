@@ -32,7 +32,7 @@ class ImageUploadView(APIView):
      
      serializer = ImageUploadSerializer(data=request.data) 
      if serializer.is_valid():
-          return JsonResponse({'error': 'No image provided'}, status= 400)
+          return JsonResponse({'error': 'OOooooopps'}, status= 400)
      
      file = serializer.validated_data.get('image')
      if not file:
