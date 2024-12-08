@@ -21,8 +21,8 @@ from django.conf import settings
 @parser_classes([MultiPartParser])
 @api_view(['POST'])
 @swagger_auto_schema(
-    # request_body=ImageUploadSerializer,
-    # responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
+    request_body=ImageUploadSerializer,
+    responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
     )
 
 def optimize_image(request):
