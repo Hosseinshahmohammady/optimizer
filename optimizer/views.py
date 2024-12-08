@@ -14,18 +14,22 @@ from PIL import Image
 import io
 import os
 from django.conf import settings
+from .models import ImageUpload
 
 # @parser_classes([MultiPartParser])
-@api_view(['POST'])
+# @api_view(['POST'])
 # @swagger_auto_schema(
 #     request_body=ImageUploadSerializer,
 #     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
 #     )
 
-def optimize_image(request):
+# def optimize_image(request):
      
     # file = request.FILES.get('image')
 
+class ImageUploadView(APIView):
+    def post(self, request, *args, **kwargs):
+     
      serializer = ImageUploadSerializer(data=request.data) 
      if serializer.is_valid():
           return JsonResponse({'error': 'No image provided'}, status= 400)
