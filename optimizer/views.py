@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.decorators import parser_classes
 from drf_yasg.utils import swagger_auto_schema
-from .serializers import ImageUploadSerializer
+from .seializers import ImageUploadSerializer
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -14,28 +14,27 @@ from PIL import Image
 import io
 import os
 from django.conf import settings
-from .models import ImageUpload
+# from .models import ImageUpload
 
-# @parser_classes([MultiPartParser])
-# @api_view(['POST'])
-# @swagger_auto_schema(
-#     request_body=ImageUploadSerializer,
-#     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
-#     )
 
-# def optimize_image(request):
-     
-    # file = request.FILES.get('image')
 
-class ImageUploadView(APIView):
-    def post(self, request, *args, **kwargs):
+@parser_classes([MultiPartParser])
+@api_view(['POST'])
+@swagger_auto_schema(
+    request_body=ImageUploadSerializer,
+    responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
+    )
+
+def optimize_image(request):
      
-     serializer = ImageUploadSerializer(data=request.data) 
-     if serializer.is_valid():
-          return JsonResponse({'error': 'OOooooopps'}, status= 400)
+     file = request.FILES.get('image')
      
-     file = serializer.validated_data.get('image')
-     if not file:
+    #  serializer = ImageUploadSerializer(data=request.data) 
+    #  if serializer.is_valid():
+    #       return JsonResponse({'error': 'OOooooopps'}, status= 400)
+     
+    #  file = serializer.validated_data.get('image')
+     if not file: 
         return JsonResponse({'error': 'No image exist'}, status=400)
      
      quality = request.data.get('quality', 85)
