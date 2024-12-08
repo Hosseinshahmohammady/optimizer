@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.decorators import parser_classes
 from drf_yasg.utils import swagger_auto_schema
-from .seializers import ImageUploadSerializer
+# from .seializers import ImageUploadSerializer
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -21,8 +21,8 @@ from django.conf import settings
 @parser_classes([MultiPartParser])
 @api_view(['POST'])
 @swagger_auto_schema(
-    request_body=ImageUploadSerializer,
-    responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
+    # request_body=ImageUploadSerializer,
+    # responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
     )
 
 def optimize_image(request):
