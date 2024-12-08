@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import optimize_image, ImageUploadView
+from .views import ImageUploadView
 from .import views
 
 from rest_framework import permissions
