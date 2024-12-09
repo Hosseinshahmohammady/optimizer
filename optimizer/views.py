@@ -30,14 +30,14 @@ def optimize_image(request):
     #  file = request.FILES.get('image')
      
      serializer = ImageUploadSerializer(data=request.data) 
-     serializer.is_valid()
-        #   return JsonResponse({'error': 'OOooooopps'}, status= 400)
+     if serializer.is_valid():
+                # return JsonResponse({'error': 'OOooooopps'}, status= 400)
      
-     file = serializer.validated_data.get('image')
-     if not file: 
-        return JsonResponse({'error': 'No image exist'}, status=400)
+        file = serializer.validated_data.get('image')
+    #  if not file: 
+    #     return JsonResponse({'error': 'No image exist'}, status=400)
      
-     quality = request.data.get('quality', 85)
+        quality = request.data.get('quality', 85)
 
      try:
         quality = int(quality)
