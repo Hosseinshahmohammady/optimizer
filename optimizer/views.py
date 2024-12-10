@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 
@@ -18,25 +20,44 @@ from django.conf import settings
 
 
 
-@parser_classes([MultiPartParser])
-@api_view(['POST'])
-@swagger_auto_schema(
-    request_body=ImageUploadSerializer,
-    responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
-    )
 
-def optimize_image(request):
+# @parser_classes([MultiPartParser])
+# @api_view(['POST'])
+# @swagger_auto_schema(
+#     request_body=ImageUploadSerializer,
+#     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
+#     )
+
+# def optimize_image(request):
      
     #  file = request.FILES.get('image')
      
-     serializer = ImageUploadSerializer(data=request.data) 
-     if serializer.is_valid():
+    #  serializer = ImageUploadSerializer(data=request.data) 
+    #  if serializer.is_valid():
                 # return JsonResponse({'error': 'OOooooopps'}, status= 400)
      
-        file = serializer.validated_data.get('image')
+        # file = serializer.validated_data.get('image')
     #  if not file: 
     #     return JsonResponse({'error': 'No image exist'}, status=400)
+    
+
      
+@swagger_auto_schema(
+         request_body=ImageUploadSerializer,
+    responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
+     )
+class optimize_image(APIView):
+
+        seriializer_class = ImageUploadSerializer
+        
+        def post(self, request, *args, **kwargs):
+             serializer = self.seriializer_class(data=request.data)
+             if serializer.is_valid():
+                  return Response({"message": "Success!"}, status=status.HTTP_200_OK)
+             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
         quality = request.data.get('quality', 85)
 
      try:
