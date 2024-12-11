@@ -78,54 +78,51 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 
+
+
 class OptimizeImageView(APIView):
     parser_classes = [MultiPartParser]
-    
-    @csrf_exempt
 
+    @csrf_exempt  # غیرفعال کردن CSRF برای این API
+    @swagger_auto_schema(
+        request_body=ImageUploadSerializer,  # تعریف سریالایزر برای درخواست
+        responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
+    )
     def post(self, request, *args, **kwargs):
+        # استفاده از سریالایزر برای اعتبارسنجی داده‌ها
         serializer = ImageUploadSerializer(data=request.data)
-        if not serializer.is_valid():
-            return JsonResponse({'error': 'Invalid data'}, status=400)
         
-        file = serializer.validated_data.get('image')
-        if not file:
-            return JsonResponse({'error': 'No image exist'}, status=400)
+        if not serializer.is_valid():
+            return Response({"error": "Invalid data", "details": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # دریافت تصویر و کیفیت از داده‌های معتبر
+        image = serializer.validated_data.get('image')
+        quality = serializer.validated_data.get('quality', 85)
+        
+        # باز کردن تصویر
+        img = Image.open(image)
+        
+        # ایجاد مسیر ذخیره‌سازی تصویر بهینه‌شده
+        media_path = settings.MEDIA_ROOT
+        if not os.path.exists(media_path):
+            os.makedirs(media_path)
 
-        quality = request.data.get('quality', 85)
+        # ساخت نام فایل جدید
+        file_name = f"optimized_{image.name}"
+        file_path = os.path.join(media_path, file_name)
+        
+        # ذخیره‌سازی تصویر با کیفیت مشخص‌شده
+        img.save(file_path, format='JPEG', quality=quality)
 
-        try:
-            quality = int(quality)
-            if quality < 1 or quality > 100:
-                return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
-        except ValueError:
-            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
+        # ساخت URL تصویر ذخیره‌شده
+        image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-        try:
-            image = Image.open(file)
+        return Response({
+            "message": "Image optimized and saved successfully",
+            "image_url": image_url,
+            'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
+        }, status=status.HTTP_200_OK)
 
-            media_path = settings.MEDIA_ROOT
-            if not os.path.exists(media_path):
-                os.makedirs(media_path)
-
-            existing_files = os.listdir(media_path)
-            pk = len(existing_files) + 1
-
-            file_name = f'id={pk}.jpg'
-            file_path = os.path.join(media_path, file_name)
-
-            image.save(file_path, format='JPEG', quality=quality)
-
-            image_url = os.path.join(settings.MEDIA_URL, file_name)
-            
-            return JsonResponse({
-                'message': 'Image optimized and saved',
-                'image_url': image_url,
-                'image_id': f'Enter your browser : {settings.SITE_URL}/api/pk/{pk}/'
-            })
-
-        except Exception as e:
-            return JsonResponse({'error': f'Error processing image: {str(e)}'}, status=500)
 
 
 
