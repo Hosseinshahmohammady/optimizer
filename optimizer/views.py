@@ -11,15 +11,14 @@ from PIL import Image
 import os
 from django.conf import settings
 
+import logging
+
 
 class OptimizeImageView(APIView):
      parser_classes=([MultiPartParser])
      @swagger_auto_schema(
     request_body=ImageUploadSerializer,
-    responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'},
-     request_body_examples={
-        'application/json': {'image': 'file_path.jpg', 'quality': 80}
-        }
+    responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
     )
      
      def post(self, request, *args, **kwargs):
@@ -30,8 +29,11 @@ class OptimizeImageView(APIView):
         file = serializer.validated_data.get('image')
         if not file: 
             return JsonResponse({'error': 'No image exist'}, status=400)
-
+        
+        logger = logging.getLogger(__name__)
         quality = request.data.get('quality')
+        logger.debug(f"Received quality: {quality}")
+
         try:
             quality = int(quality)
             if quality < 1 or quality > 100:
