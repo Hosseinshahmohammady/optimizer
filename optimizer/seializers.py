@@ -5,5 +5,6 @@ class ImageUploadSerializer(serializers.Serializer):
     quality = serializers.IntegerField( 
         min_value=1, 
         max_value=100,
+        default=85
     )
 

@@ -16,7 +16,10 @@ class OptimizeImageView(APIView):
      parser_classes=([MultiPartParser])
      @swagger_auto_schema(
     request_body=ImageUploadSerializer,
-    responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
+    responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'},
+     request_body_examples={
+        'application/json': {'image': 'file_path.jpg', 'quality': 80}
+        }
     )
      
      def post(self, request, *args, **kwargs):
@@ -29,9 +32,8 @@ class OptimizeImageView(APIView):
             return JsonResponse({'error': 'No image exist'}, status=400)
 
         quality = request.data.get('quality')
-
         try:
-            quality = int(quality)
+            quality = int(quality, 85)
             if quality < 1 or quality > 100:
              return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
         except ValueError:
