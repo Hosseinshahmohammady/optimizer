@@ -28,11 +28,11 @@ class OptimizeImageView(APIView):
         if not file: 
             return JsonResponse({'error': 'No image exist'}, status=400)
         
-        quality = request.data.get('quality')
+        enter_quality = request.data.get('quality')
 
         try:
-            quality = int(quality)
-            if quality < 1 or quality > 100:
+            enter_quality = int(enter_quality)
+            if enter_quality < 1 or enter_quality > 100:
              return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
         except ValueError:
             return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
@@ -51,7 +51,7 @@ class OptimizeImageView(APIView):
 
         image = image.convert("RGB")
         image.thumbnail((1024, 1024))
-        image.save(file_path, format='JPEG', quality=quality)
+        image.save(file_path, format='JPEG', quality=enter_quality)
 
         image_url = os.path.join(settings.MEDIA_URL, file_name)
         #  short_url = f"{settings.SITE_URL}/image/{pk}"
