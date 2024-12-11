@@ -18,6 +18,8 @@ import os
 from django.conf import settings
 # from .models import ImageUpload
 
+from django.views.decorators.csrf import csrf_exempt
+
 
 
 
@@ -76,10 +78,11 @@ from django.conf import settings
 
 
 
-
 class OptimizeImageView(APIView):
     parser_classes = [MultiPartParser]
     
+    @csrf_exempt
+
     def post(self, request, *args, **kwargs):
         serializer = ImageUploadSerializer(data=request.data)
         if not serializer.is_valid():
