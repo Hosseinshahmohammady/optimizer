@@ -28,7 +28,7 @@ class OptimizeImageView(APIView):
         if not file: 
             return JsonResponse({'error': 'No image exist'}, status=400)
 
-        quality = request.data.get('quality', 85)
+        quality = request.data.get('quality')
 
         try:
             quality = int(quality)
