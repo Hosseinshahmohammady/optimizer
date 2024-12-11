@@ -11,8 +11,6 @@ from PIL import Image
 import os
 from django.conf import settings
 
-import logging
-
 
 class OptimizeImageView(APIView):
      parser_classes=([MultiPartParser])
@@ -30,9 +28,7 @@ class OptimizeImageView(APIView):
         if not file: 
             return JsonResponse({'error': 'No image exist'}, status=400)
         
-        logger = logging.getLogger(__name__)
         quality = request.data.get('quality')
-        logger.debug(f"Received quality: {quality}")
 
         try:
             quality = int(quality)
@@ -53,6 +49,8 @@ class OptimizeImageView(APIView):
         file_name = f'id={pk}.jpg'
         file_path = os.path.join(media_path, file_name)
 
+        image = image.convert("RGB")
+        image.thumbnail((1024, 1024))
         image.save(file_path, format='JPEG', quality=quality)
 
         image_url = os.path.join(settings.MEDIA_URL, file_name)
