@@ -43,12 +43,12 @@ class OptimizeImageView(APIView):
 
         quality = request.data.get('quality', 85)
 
-        try:
-            quality = int(quality)
-            if quality < 1 or quality > 100:
-             return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
-        except ValueError:
-            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
+        # try:
+        #     quality = int(quality)
+        #     if quality < 1 or quality > 100:
+        #      return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+        # except ValueError:
+        #     return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
     
         image = Image.open(file)
 
