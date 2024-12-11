@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import optimize_image
+from .views import OptimizeImageView
 from .import views
 
 from rest_framework import permissions
@@ -23,9 +23,10 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
+#optimize_image
 
 urlpatterns = [
-path('optimize/', optimize_image, name='optimize_image'),
+path('optimize/', OptimizeImageView.as_view(), name='optimize_image'),
 path('show_image/<int:pk>/', views.show_image, name='show_image'),
 # path('image/<int:pk>/', views.show_image, name='show_image'),
 path('<int:pk>/', views.image_id, name='url_id'),

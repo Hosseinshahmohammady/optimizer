@@ -9,8 +9,3 @@ class ImageUploadSerializer(serializers.Serializer):
         default=85
     )
 
-    def validate_quality(self, value):
-        if value < 1 or value > 100 :
-            raise
-        serializers.ValidationError("Quality must be betweet 1 and 100.")
-        return value

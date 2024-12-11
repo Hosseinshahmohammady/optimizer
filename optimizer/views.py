@@ -30,66 +30,102 @@ from django.conf import settings
 
 # def optimize_image(request):
      
-    #  file = request.FILES.get('image')
+#     #  file = request.FILES.get('image')
      
-    #  serializer = ImageUploadSerializer(data=request.data) 
-    #  if serializer.is_valid():
-                # return JsonResponse({'error': 'OOooooopps'}, status= 400)
+#     serializer = ImageUploadSerializer(data=request.data) 
+#     if serializer.is_valid():
+#         return JsonResponse({'error': 'OOooooopps'}, status= 400)
      
-        # file = serializer.validated_data.get('image')
-    #  if not file: 
-    #     return JsonResponse({'error': 'No image exist'}, status=400)
+#     file = serializer.validated_data.get('image')
+#     if not file: 
+#         return JsonResponse({'error': 'No image exist'}, status=400)
+
+#     quality = request.data.get('quality', 85)
+
+#     try:
+#         quality = int(quality)
+#         if quality < 1 or quality > 100:
+#             return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+#     except ValueError:
+#             return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
     
+#     image = Image.open(file)
 
-     
-@swagger_auto_schema(
-         request_body=ImageUploadSerializer,
-    responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
-     )
-class optimize_image(APIView):
+#     media_path = settings.MEDIA_ROOT
+#     if not os.path.exists(media_path):
+#         os.makedirs(media_path)
 
-        seriializer_class = ImageUploadSerializer
+#     existing_files = os.listdir(media_path)
+#     pk = len(existing_files) + 1
+
+#     file_name = f'id={pk}.jpg'
+#     file_path = os.path.join(media_path, file_name)
+
+#     image.save(file_path, format='JPEG', quality=quality)
+
+#     image_url = os.path.join(settings.MEDIA_URL, file_name)
+#     #  short_url = f"{settings.SITE_URL}/image/{pk}"
+
+#     return JsonResponse({
+#         'message': 'Image optimized and saved',
+#         'image_url': image_url,
+#         # 'short_url': short_url,
+#         'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
+#         }) 
+
+
+
+
+
+class OptimizeImageView(APIView):
+    parser_classes = [MultiPartParser]
+    
+    def post(self, request, *args, **kwargs):
+        serializer = ImageUploadSerializer(data=request.data)
+        if not serializer.is_valid():
+            return JsonResponse({'error': 'Invalid data'}, status=400)
         
-        def post(self, request, *args, **kwargs):
-             serializer = self.seriializer_class(data=request.data)
-             if serializer.is_valid():
-                  return Response({"message": "Success!"}, status=status.HTTP_200_OK)
-             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+        file = serializer.validated_data.get('image')
+        if not file:
+            return JsonResponse({'error': 'No image exist'}, status=400)
 
         quality = request.data.get('quality', 85)
 
-     try:
-        quality = int(quality)
-        if quality < 1 or quality > 100:
-            return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
-     except ValueError:
-        return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
-    
-     image = Image.open(file)
+        try:
+            quality = int(quality)
+            if quality < 1 or quality > 100:
+                return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+        except ValueError:
+            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
 
-     media_path = settings.MEDIA_ROOT
-     if not os.path.exists(media_path):
-        os.makedirs(media_path)
+        try:
+            image = Image.open(file)
 
-     existing_files = os.listdir(media_path)
-     pk = len(existing_files) + 1
+            media_path = settings.MEDIA_ROOT
+            if not os.path.exists(media_path):
+                os.makedirs(media_path)
 
-     file_name = f'id={pk}.jpg'
-     file_path = os.path.join(media_path, file_name)
+            existing_files = os.listdir(media_path)
+            pk = len(existing_files) + 1
 
-     image.save(file_path, format='JPEG', quality=quality)
+            file_name = f'id={pk}.jpg'
+            file_path = os.path.join(media_path, file_name)
 
-     image_url = os.path.join(settings.MEDIA_URL, file_name)
-    #  short_url = f"{settings.SITE_URL}/image/{pk}"
+            image.save(file_path, format='JPEG', quality=quality)
 
-     return JsonResponse({
-        'message': 'Image optimized and saved',
-        'image_url': image_url,
-        # 'short_url': short_url,
-        'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
-        }) 
+            image_url = os.path.join(settings.MEDIA_URL, file_name)
+            
+            return JsonResponse({
+                'message': 'Image optimized and saved',
+                'image_url': image_url,
+                'image_id': f'Enter your browser : {settings.SITE_URL}/api/pk/{pk}/'
+            })
+
+        except Exception as e:
+            return JsonResponse({'error': f'Error processing image: {str(e)}'}, status=500)
+
+
+
 
 
  
