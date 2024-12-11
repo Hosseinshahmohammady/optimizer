@@ -23,7 +23,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 class OptimizeImageView(APIView):
      parser_classes=([MultiPartParser])
-     @csrf_exempt
+    #  @csrf_exempt
      @swagger_auto_schema(
     request_body=ImageUploadSerializer,
     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
