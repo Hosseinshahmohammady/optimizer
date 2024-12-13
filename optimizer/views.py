@@ -71,30 +71,30 @@ class OptimizeImageView(APIView):
          }) 
 
 
-def show_image(request, pk):
+# def show_image(request, pk):
     
-    file_name = f'id={pk}.jpg'
-    file_path = os.path.join(settings.MEDIA_ROOT, file_name)
+#     file_name = f'id={pk}.jpg'
+#     file_path = os.path.join(settings.MEDIA_ROOT, file_name)
 
-    if not os.path.exists(file_path):
-        return HttpResponse("Image not found", status=404)
+#     if not os.path.exists(file_path):
+#         return HttpResponse("Image not found", status=404)
     
-    with open(file_path, 'rb') as image_file:
-        return HttpResponse(image_file.read(), content_type="image/jpeg")
+#     with open(file_path, 'rb') as image_file:
+#         return HttpResponse(image_file.read(), content_type="image/jpeg")
     
 
 
-def image_id(request, pk):
+# def image_id(request, pk):
 
-    file_name = f'id={pk}.jpg'
-    file_path = os.path.join(settings.MEDIA_ROOT, file_name)
+#     file_name = f'id={pk}.jpg'
+#     file_path = os.path.join(settings.MEDIA_ROOT, file_name)
 
-    if not os.path.exists(file_path):
-        return JsonResponse({'error': 'Image not found'}, status=404)
+#     if not os.path.exists(file_path):
+#         return JsonResponse({'error': 'Image not found'}, status=404)
     
-    image_url = os.path.join(settings.MEDIA_URL, file_name)
+#     image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-    return JsonResponse({
-        'message': 'Image found',
-        'image_url': image_url,
-    })
+#     return JsonResponse({
+#         'message': 'Image found',
+#         'image_url': image_url,
+#     })
