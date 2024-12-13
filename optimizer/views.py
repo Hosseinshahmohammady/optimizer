@@ -11,16 +11,13 @@ from PIL import Image
 import os
 from django.conf import settings
 
-
-
 class OptimizeImageView(APIView):
      parser_classes=([MultiPartParser])
      @swagger_auto_schema(
     request_body=ImageUploadSerializer,
     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'}
     )
-     
-     def post(self, request, *args, **kwargs):
+     def post(self, request):
         serializer = ImageUploadSerializer(data=request.data) 
         if not serializer.is_valid():
                 return JsonResponse({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
@@ -29,7 +26,7 @@ class OptimizeImageView(APIView):
         if not file: 
             return JsonResponse({'error': 'No image exist'}, status=400)
         
-        quality = request.data.get('quality')
+        quality = serializer.validated_data.get('quality')
         if quality is None:
             return JsonResponse({'error': 'Quality is required'}, status=400)
 
@@ -63,6 +60,7 @@ class OptimizeImageView(APIView):
             return JsonResponse({'error': f'Error saving image: {str(e)}'}, status=500)
 
         image_url = os.path.join(settings.MEDIA_URL, file_name)
+        
         #  short_url = f"{settings.SITE_URL}/image/{pk}"
 
         return JsonResponse({
