@@ -15,20 +15,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from decouple import config
 
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY", default="test")
 
-# 'django-insecure-+1__%tl917pru66z=(xe^gpoex3woh8+hji1h#ozg-3g-%3s^f'
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", cast=bool, default=True)
 
 ALLOWED_HOSTS = config(
@@ -53,6 +43,7 @@ INSTALLED_APPS = [
     'optimizer',
     'rest_framework',
     'drf_yasg',
+    'rest_framework_simplejwt',
 
 
 ]
@@ -88,10 +79,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'image_optimizer.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {     
     'default':
      {
@@ -105,13 +92,6 @@ DATABASES = {
     } 
          
         }
-
-
-
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -128,10 +108,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -143,11 +119,6 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# STATICFILES_DIRS = [
-#     BASE_DIR / 'static',  
-# ]
-# STATIC_ROOT = BASE_DIR / 'staticfiles'
-
 STATIC_ROOT = str(BASE_DIR / 'static/')
 STATIC_URL = 'static/'
 
@@ -157,3 +128,24 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 # SITE_URL = 'http://172.105.38.184:8000'
+
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     
+    'ROTATE_REFRESH_TOKENS': False,                   
+    'BLACKLIST_AFTER_ROTATION': False,                
+    'ALGORITHM': 'HS256',                            
+    'SIGNING_KEY': config('SECRET_KEY'),                 
+    'VERIFYING_KEY': None,                            
+    'AUDIENCE': None,
+    'ISSUER': None,
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}

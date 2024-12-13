@@ -8,6 +8,7 @@ from drf_yasg import openapi
 from django.http import HttpResponse
 from rest_framework import routers
 # from rest_framework_swagger.views import get_swagger_view
+from rest_framework_simplejwt import views as jwt_views
 
 
 schema_view = get_schema_view(
@@ -27,10 +28,12 @@ schema_view = get_schema_view(
 
 urlpatterns = [
 path('optimize/', OptimizeImageView.as_view(), name='optimize_image'),
-# path('show_image/<int:pk>/', views.show_image, name='show_image'),
+path('show_image/<int:pk>/', views.show_image, name='show_image'),
 # path('image/<int:pk>/', views.show_image, name='show_image'),
-# path('<int:pk>/', views.image_id, name='url_id'),
+path('<int:pk>/', views.image_id, name='url_id'),
 path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 path('swagger.yaml', schema_view.without_ui(cache_timeout=0), name='swagger-yaml'),
+path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
+path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
 
 ]

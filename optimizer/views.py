@@ -1,16 +1,40 @@
 from django.http import JsonResponse
+from django.http import HttpResponse
+from django.conf import settings
+from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.views import APIView
-
 from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
 from .seializers import ImageUploadSerializer
-
 from PIL import Image
 import os
-from django.conf import settings
+
+
+class ObtainJWTTokenView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            return HttpResponse({
+                'access_token': str(refresh.access_token),
+                'refresh_token': str(refresh),
+            }, status=status.HTTP_200_OK)
+        
+        return HttpResponse({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
 
 class OptimizeImageView(APIView):
+     permission_classes = [IsAuthenticated]
      parser_classes=([MultiPartParser])
      @swagger_auto_schema(
     request_body=ImageUploadSerializer,
@@ -28,7 +52,7 @@ class OptimizeImageView(APIView):
         quality = request.data.get('quality')
         if quality is None:
             return JsonResponse({'error': 'Quality is required'}, status=400)
-
+        
         try:
             quality = int(quality)
             if quality < 1 or quality > 100:
@@ -67,34 +91,34 @@ class OptimizeImageView(APIView):
         'message': 'Image optimized and saved',
         'image_url': image_url,
         # 'short_url': short_url,
-        # 'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
+        'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
          }) 
 
 
-# def show_image(request, pk):
+def show_image(request, pk):
     
-#     file_name = f'id={pk}.jpg'
-#     file_path = os.path.join(settings.MEDIA_ROOT, file_name)
+    file_name = f'id={pk}.jpg'
+    file_path = os.path.join(settings.MEDIA_ROOT, file_name)
 
-#     if not os.path.exists(file_path):
-#         return HttpResponse("Image not found", status=404)
+    if not os.path.exists(file_path):
+        return HttpResponse("Image not found", status=404)
     
-#     with open(file_path, 'rb') as image_file:
-#         return HttpResponse(image_file.read(), content_type="image/jpeg")
+    with open(file_path, 'rb') as image_file:
+        return HttpResponse(image_file.read(), content_type="image/jpeg")
     
 
 
-# def image_id(request, pk):
+def image_id(request, pk):
 
-#     file_name = f'id={pk}.jpg'
-#     file_path = os.path.join(settings.MEDIA_ROOT, file_name)
+    file_name = f'id={pk}.jpg'
+    file_path = os.path.join(settings.MEDIA_ROOT, file_name)
 
-#     if not os.path.exists(file_path):
-#         return JsonResponse({'error': 'Image not found'}, status=404)
+    if not os.path.exists(file_path):
+        return JsonResponse({'error': 'Image not found'}, status=404)
     
-#     image_url = os.path.join(settings.MEDIA_URL, file_name)
+    image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-#     return JsonResponse({
-#         'message': 'Image found',
-#         'image_url': image_url,
-#     })
+    return JsonResponse({
+        'message': 'Image found',
+        'image_url': image_url,
+    })
