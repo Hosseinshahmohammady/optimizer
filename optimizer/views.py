@@ -34,7 +34,7 @@ class OptimizeImageView(APIView):
             return JsonResponse({'error': 'Quality is required'}, status=400)
 
         try:
-            quality = int(quality)
+            # quality = int(quality)
             if quality < 1 or quality > 100:
              return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
         except ValueError:
