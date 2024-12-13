@@ -52,8 +52,6 @@ class OptimizeImageView(APIView):
         file_name = f'id={pk}.jpg'
         file_path = os.path.join(media_path, file_name)
 
-        image = image.convert("RGB")
-        image = image.resize((1024, 1024), Image.ANTIALIAS)
         image.save(file_path, format='JPEG', quality=quality, optimize=True)
 
         image_url = os.path.join(settings.MEDIA_URL, file_name)
