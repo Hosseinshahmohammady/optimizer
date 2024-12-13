@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from .seializers import ImageUploadSerializer
 from PIL import Image
 import os
@@ -16,6 +17,22 @@ import os
 
 class ObtainJWTTokenView(APIView):
     permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_description="Obtains JWT token",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING),
+                'password': openapi.Schema(type=openapi.TYPE_STRING),
+            },
+        ),
+        responses={200: openapi.Response('JWT Token', openapi.Schema(type=openapi.TYPE_OBJECT, properties={
+            'access': openapi.Schema(type=openapi.TYPE_STRING),
+            'refresh': openapi.Schema(type=openapi.TYPE_STRING),
+        }))}
+    )
+
     def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
@@ -24,12 +41,12 @@ class ObtainJWTTokenView(APIView):
 
         if user is not None:
             refresh = RefreshToken.for_user(user)
-            return HttpResponse({
+            return JsonResponse({
                 'access_token': str(refresh.access_token),
                 'refresh_token': str(refresh),
             }, status=status.HTTP_200_OK)
         
-        return HttpResponse({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 
