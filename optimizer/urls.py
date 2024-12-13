@@ -27,9 +27,9 @@ schema_view = get_schema_view(
 
 urlpatterns = [
 path('optimize/', OptimizeImageView.as_view(), name='optimize_image'),
-path('show_image/<int:pk>/', views.show_image, name='show_image'),
+# path('show_image/<int:pk>/', views.show_image, name='show_image'),
 # path('image/<int:pk>/', views.show_image, name='show_image'),
-path('<int:pk>/', views.image_id, name='url_id'),
+# path('<int:pk>/', views.image_id, name='url_id'),
 path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 path('swagger.yaml', schema_view.without_ui(cache_timeout=0), name='swagger-yaml'),
 
