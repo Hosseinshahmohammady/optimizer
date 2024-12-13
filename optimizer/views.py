@@ -6,7 +6,6 @@ from rest_framework.parsers import MultiPartParser
 from drf_yasg.utils import swagger_auto_schema
 from .seializers import ImageUploadSerializer
 
-# from django.http import HttpResponse
 from PIL import Image
 import os
 from django.conf import settings
