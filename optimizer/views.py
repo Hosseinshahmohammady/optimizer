@@ -12,6 +12,7 @@ import os
 from django.conf import settings
 
 
+
 class OptimizeImageView(APIView):
      parser_classes=([MultiPartParser])
      @swagger_auto_schema(
@@ -28,11 +29,13 @@ class OptimizeImageView(APIView):
         if not file: 
             return JsonResponse({'error': 'No image exist'}, status=400)
         
-        enter_quality = request.data.get('quality')
+        quality = request.data.get('quality')
+        if quality is None:
+            return JsonResponse({'error': 'Quality is required'}, status=400)
 
         try:
-            enter_quality = int(enter_quality)
-            if enter_quality < 1 or enter_quality > 100:
+            quality = int(quality)
+            if quality < 1 or quality > 100:
              return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
         except ValueError:
             return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
@@ -50,8 +53,8 @@ class OptimizeImageView(APIView):
         file_path = os.path.join(media_path, file_name)
 
         image = image.convert("RGB")
-        image.thumbnail((1024, 1024))
-        image.save(file_path, format='JPEG', quality=enter_quality)
+        image = image.resize((1024, 1024), Image.ANTIALIAS)
+        image.save(file_path, format='JPEG', quality=quality, optimize=True)
 
         image_url = os.path.join(settings.MEDIA_URL, file_name)
         #  short_url = f"{settings.SITE_URL}/image/{pk}"
