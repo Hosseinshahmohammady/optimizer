@@ -138,7 +138,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': False,                   
     'BLACKLIST_AFTER_ROTATION': False,                
     'ALGORITHM': 'HS256',                            
-    'SIGNING_KEY': config('SECRET_KEY'),                 
+    'SIGNING_KEY': config('SECRET_KEY', default='jwt@5703rr#pfpdpsp'),              
     'VERIFYING_KEY': None,                            
     'AUDIENCE': None,
     'ISSUER': None,
