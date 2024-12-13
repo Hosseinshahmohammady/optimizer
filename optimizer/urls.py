@@ -7,7 +7,6 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.http import HttpResponse
 from rest_framework import routers
-# from rest_framework_swagger.views import get_swagger_view
 from rest_framework_simplejwt import views as jwt_views
 
 
@@ -25,7 +24,6 @@ schema_view = get_schema_view(
     security=[{'Bearer': []}],
 )
 
-#optimize_image
 
 urlpatterns = [
 path('optimize/', OptimizeImageView.as_view(), name='optimize_image'),
