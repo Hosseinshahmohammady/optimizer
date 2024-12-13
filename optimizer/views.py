@@ -42,7 +42,7 @@ class OptimizeImageView(APIView):
         except Exception as e:
             return JsonResponse({'error': f'Error opening image: {str(e)}'}, status=400)
         
-        image = Image.convert("RGB")
+        image = image.convert("RGB")
 
         media_path = settings.MEDIA_ROOT
         if not os.path.exists(media_path):
