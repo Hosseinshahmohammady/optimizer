@@ -17,22 +17,6 @@ import os
 
 class ObtainJWTTokenView(APIView):
     permission_classes = [AllowAny]
-
-    @swagger_auto_schema(
-        operation_description="Obtains JWT token",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'username': openapi.Schema(type=openapi.TYPE_STRING),
-                'password': openapi.Schema(type=openapi.TYPE_STRING),
-            },
-        ),
-        responses={200: openapi.Response('JWT Token', openapi.Schema(type=openapi.TYPE_OBJECT, properties={
-            'access': openapi.Schema(type=openapi.TYPE_STRING),
-            'refresh': openapi.Schema(type=openapi.TYPE_STRING),
-        }))}
-    )
-
     def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
