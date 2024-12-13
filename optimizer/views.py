@@ -22,11 +22,11 @@ class OptimizeImageView(APIView):
         if not serializer.is_valid():
                 return JsonResponse({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
      
-        file = serializer.validated_data.get('image')
-        if not file: 
+        image = serializer.validated_data.get('image')
+        if not image: 
             return JsonResponse({'error': 'No image exist'}, status=400)
         
-        quality = serializer.validated_data.get('quality')
+        quality = request.data.get('quality')
         if quality is None:
             return JsonResponse({'error': 'Quality is required'}, status=400)
 
@@ -38,11 +38,11 @@ class OptimizeImageView(APIView):
             return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
     
         try:
-            image = Image.open(file)
+            image = Image.open(image)
         except Exception as e:
             return JsonResponse({'error': f'Error opening image: {str(e)}'}, status=400)
         
-        image = image.convert("RGB")
+        image = Image.convert("RGB")
 
         media_path = settings.MEDIA_ROOT
         if not os.path.exists(media_path):
@@ -60,7 +60,7 @@ class OptimizeImageView(APIView):
             return JsonResponse({'error': f'Error saving image: {str(e)}'}, status=500)
 
         image_url = os.path.join(settings.MEDIA_URL, file_name)
-        
+
         #  short_url = f"{settings.SITE_URL}/image/{pk}"
 
         return JsonResponse({
