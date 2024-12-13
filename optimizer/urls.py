@@ -8,7 +8,7 @@ from drf_yasg import openapi
 from django.http import HttpResponse
 from rest_framework import routers
 from rest_framework_simplejwt import views as jwt_views
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import AllowAny
 
 
 schema_view = get_schema_view(
@@ -20,13 +20,20 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="contact@yourdomain.com"),
         license=openapi.License(name="BSD License"),
     ),
-    authentication_classes=[JWTAuthentication],  
-    security=[
-        {
-            'Bearer': [],
-        }
-    ],
+    public=True,
+    permission_classes=(AllowAny,),
 )
+swagger_schema = schema_view()
+swagger_schema['components'] = {
+    'securitySchemes': {
+        'Bearer': {
+            'type': 'http',
+            'scheme': 'bearer',
+            'bearerFormat': 'JWT'
+        }
+    }
+}
+
 
 
 urlpatterns = [
