@@ -54,6 +54,7 @@ class OptimizeImageView(APIView):
         file_path = os.path.join(media_path, file_name)
 
         try:
+            print(f"Quality received: {quality}")
             image.save(file_path, format='JPEG', quality=quality, optimize=True)
         except Exception as e:
             return JsonResponse({'error': f'Error saving image: {str(e)}'}, status=500)
