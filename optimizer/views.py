@@ -40,7 +40,7 @@ class OptimizeImageView(APIView):
      @swagger_auto_schema(
     request_body=ImageUploadSerializer,
     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'},
-    security=[{'Bearer': []}]
+    
     )
      def post(self, request):
         serializer = ImageUploadSerializer(data=request.data) 

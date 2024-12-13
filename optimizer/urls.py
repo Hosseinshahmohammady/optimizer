@@ -23,15 +23,30 @@ schema_view = get_schema_view(
     public=True,
     permission_classes=(AllowAny,),
 )
-swagger_schema = schema_view()
-swagger_schema['components'] = {
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Image Optimizer API",
+        default_version='v1',
+        description="API for optimizing and reducing image size",
+        contact=openapi.Contact(email="contact@yourdomain.com"),
+    ),
+    public=True,
+    permission_classes=(AllowAny,),
+)
+
+security_scheme = openapi.SecurityScheme(
+    type=openapi.TYPE_APIKEY,
+    in_=openapi.IN_HEADER,
+    name='Authorization'
+)
+
+schema_view.schema.view.swagger_schema['components'] = {
     'securitySchemes': {
-        'Bearer': {
-            'type': 'http',
-            'scheme': 'bearer',
-            'bearerFormat': 'JWT'
-        }
-    }
+        'BearerAuth': security_scheme
+    },
+    'security': [
+        {'BearerAuth': []}
+    ]
 }
 
 
