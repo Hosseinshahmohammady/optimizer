@@ -34,13 +34,18 @@ class OptimizeImageView(APIView):
             return JsonResponse({'error': 'Quality is required'}, status=400)
 
         try:
-            # quality = int(quality)
+            quality = int(quality)
             if quality < 1 or quality > 100:
              return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
         except ValueError:
             return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
     
-        image = Image.open(file)
+        try:
+            image = Image.open(file)
+        except Exception as e:
+            return JsonResponse({'error': f'Error opening image: {str(e)}'}, status=400)
+        
+        image = image.convert("RGB")
 
         media_path = settings.MEDIA_ROOT
         if not os.path.exists(media_path):
