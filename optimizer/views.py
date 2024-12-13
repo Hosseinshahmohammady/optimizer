@@ -6,7 +6,7 @@ from rest_framework.parsers import MultiPartParser
 from drf_yasg.utils import swagger_auto_schema
 from .seializers import ImageUploadSerializer
 
-from django.http import HttpResponse
+# from django.http import HttpResponse
 from PIL import Image
 import os
 from django.conf import settings
@@ -67,7 +67,7 @@ class OptimizeImageView(APIView):
         'message': 'Image optimized and saved',
         'image_url': image_url,
         # 'short_url': short_url,
-        'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
+        # 'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
          }) 
 
 
