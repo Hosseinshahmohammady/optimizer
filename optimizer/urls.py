@@ -36,17 +36,3 @@ path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_p
 path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
 
 ]
-
-
-
-security_scheme = {
-    'securitySchemes': {
-        'Bearer': {
-            'type': 'http',
-            'scheme': 'bearer',
-            'bearerFormat': 'JWT',
-        }
-    }
-}
-swagger_schema = schema_view()
-swagger_schema._swagger['components'] = security_scheme
