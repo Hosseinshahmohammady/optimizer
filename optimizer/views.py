@@ -13,6 +13,9 @@ from drf_yasg import openapi
 from .seializers import ImageUploadSerializer
 from PIL import Image
 import os
+import cv2
+import numpy as np
+from io import BytesIO
 
 
 class ObtainJWTTokenView(APIView):
@@ -55,19 +58,28 @@ class OptimizeImageView(APIView):
         if quality is None:
             return JsonResponse({'error': 'Quality is required'}, status=400)
         
-        try:
-            quality = int(quality)
-            if quality < 1 or quality > 100:
-             return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
-        except ValueError:
-            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
-    
-        try:
-            image = Image.open(image)
-        except Exception as e:
-            return JsonResponse({'error': f'Error opening image: {str(e)}'}, status=400)
+        img = cv2.imread(image.path)
+
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+        result, img_encoded = cv2.imencode('.jpg', img, encode_param)
+        if not result :
+            return JsonResponse({'detail':"The image could not be compressed"}, status=status.HTTP_400_BAD_REQUEST)
         
-        image = image.convert("RGB")
+
+
+        # try:
+        #     quality = int(quality)
+        #     if quality < 1 or quality > 100:
+        #      return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+        # except ValueError:
+        #     return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
+    
+        # try:
+        #     image = Image.open(image)
+        # except Exception as e:
+        #     return JsonResponse({'error': f'Error opening image: {str(e)}'}, status=400)
+        
+        # image = image.convert("RGB")
 
         media_path = settings.MEDIA_ROOT
         if not os.path.exists(media_path):
@@ -79,12 +91,8 @@ class OptimizeImageView(APIView):
         file_name = f'id={pk}.jpg'
         file_path = os.path.join(media_path, file_name)
 
-        try:
-            print(f"Quality received: {quality}")
-            image.save(file_path, format='JPEG', quality=quality, optimize=True)
-        except Exception as e:
-            return JsonResponse({'error': f'Error saving image: {str(e)}'}, status=500)
-
+        image.save(file_path, format='JPEG', quality=quality, optimize=True)
+        
         image_url = os.path.join(settings.MEDIA_URL, file_name)
 
         #  short_url = f"{settings.SITE_URL}/image/{pk}"
