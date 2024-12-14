@@ -132,6 +132,16 @@ MEDIA_URL = '/media/'
 
 from datetime import timedelta
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'
+        }
+    }
+}
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     
@@ -150,12 +160,4 @@ REST_FRAMEWORK = {
     ),
 }
 
-SWAGGER_SETTINGS = {
-    'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'in': 'header',
-            'name': 'Authorization'
-        }
-    }
-}
+
