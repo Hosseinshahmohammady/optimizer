@@ -9,6 +9,9 @@ from django.http import HttpResponse
 from rest_framework import routers
 from rest_framework_simplejwt import views as jwt_views
 from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 
 
 schema_view = get_schema_view(
@@ -21,9 +24,9 @@ schema_view = get_schema_view(
         license=openapi.License(name="BSD License"),
     ),
     public=True,
-    permission_classes=(AllowAny,),
+    permission_classes=(permissions.AllowAny,),
+    authentication_classes=[JWTAuthentication],
 )
-
 
 urlpatterns = [
 path('optimize/', OptimizeImageView.as_view(), name='optimize_image'),
