@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
     libsm6 \
     libxrender1 \
     libxext6 \
-    libGL1 \
+    libgl1-mesa-glx \
     && apt-get clean
 
 RUN pip install --no-cache-dir opencv-python
