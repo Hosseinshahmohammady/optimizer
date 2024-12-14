@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.http import HttpResponse
 from django.conf import settings
 from django.contrib.auth import authenticate
+from django.core.files.storage import default_storage
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
@@ -15,6 +16,7 @@ import os
 import cv2
 import numpy as np
 from io import BytesIO
+from PIL import Image
 
 
 class ObtainJWTTokenView(APIView):
@@ -57,16 +59,23 @@ class OptimizeImageView(APIView):
         if quality is None:
             return JsonResponse({'error': 'Quality is required'}, status=400)
 
-        try:
+        try:    
             quality = int(quality)
             if quality < 1 or quality > 100:
-             return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+                return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
         except ValueError:
-            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
+                return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
 
         
-        img = cv2.imread(image.path)
-            
+        try:
+            file_data = image.read()
+            nparr = np.frombuffer(file_data, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            if img is None:
+                raise ValueError("The image could not be decoded.")
+        except Exception as e:    
+                return JsonResponse({'error': str(e)}, status=400)
+
             
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
         result, img_encoded = cv2.imencode('.jpg', img, encode_param)
