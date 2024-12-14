@@ -11,7 +11,6 @@ from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .seializers import ImageUploadSerializer
-from PIL import Image
 import os
 import cv2
 import numpy as np
@@ -57,30 +56,24 @@ class OptimizeImageView(APIView):
         quality = request.data.get('quality')
         if quality is None:
             return JsonResponse({'error': 'Quality is required'}, status=400)
+
+        try:
+            quality = int(quality)
+            if quality < 1 or quality > 100:
+             return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+        except ValueError:
+            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
+
         
         img = cv2.imread(image.path)
-
+            
+            
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
         result, img_encoded = cv2.imencode('.jpg', img, encode_param)
-        if not result :
-            return JsonResponse({'detail':"The image could not be compressed"}, status=status.HTTP_400_BAD_REQUEST)
-        
-
-
-        # try:
-        #     quality = int(quality)
-        #     if quality < 1 or quality > 100:
-        #      return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
-        # except ValueError:
-        #     return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
+        if not result:
+            raise ValueError("The image could not be compressed.")
     
-        # try:
-        #     image = Image.open(image)
-        # except Exception as e:
-        #     return JsonResponse({'error': f'Error opening image: {str(e)}'}, status=400)
         
-        # image = image.convert("RGB")
-
         media_path = settings.MEDIA_ROOT
         if not os.path.exists(media_path):
             os.makedirs(media_path)
@@ -91,7 +84,8 @@ class OptimizeImageView(APIView):
         file_name = f'id={pk}.jpg'
         file_path = os.path.join(media_path, file_name)
 
-        image.save(file_path, format='JPEG', quality=quality, optimize=True)
+        with open(file_path, 'wb') as f:
+                f.write(img_encoded.tobytes())
         
         image_url = os.path.join(settings.MEDIA_URL, file_name)
 
@@ -103,6 +97,7 @@ class OptimizeImageView(APIView):
         # 'short_url': short_url,
         'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
          }) 
+     
 
 
 def show_image(request, pk):
