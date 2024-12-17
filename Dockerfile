@@ -20,6 +20,8 @@ COPY requirements.txt .
 
 RUN pip install --upgrade pip && pip3 install -r requirements.txt
 
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138
+
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libsm6 \
