@@ -31,8 +31,7 @@ from .tokens import account_activation_token
 #     return render(request, 'home.html')
 
 def activation_sent_view(request):
-    return render(request, 'templates/activation_sent.html')
-
+    return render(request, 'activation_sent.html')
 
 def activate(request, uidb64, token):
     try:
@@ -68,7 +67,7 @@ def signup_view(request):
                current_site = get_current_site(request)
                subject = 'Please Activate Your Account'
 
-               message = render_to_string('templates/activation_request.html', {
+               message = render_to_string('activation_request.html', {
                 'user': user,
                 'domain': current_site.domain,
                 'uid': urlsafe_base64_decode(force_bytes(user.pk)).decode(),
@@ -78,7 +77,7 @@ def signup_view(request):
         return redirect('activation_sent')
     else:
         form = SignUpForm()
-    return render(request, 'templates/signup.html', {'form': form})
+    return render(request, 'signup.html', {'form': form})
 
 class ObtainJWTTokenView(APIView):
     permission_classes = [AllowAny]
