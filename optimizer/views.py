@@ -78,7 +78,7 @@ def signup_view(request):
         return redirect('activation_sent')
     else:
         form = SignUpForm()
-    return render(request, 'signup.html', {'form': form})
+    return render(request, 'templates/signup.html', {'form': form})
 
 class ObtainJWTTokenView(APIView):
     permission_classes = [AllowAny]

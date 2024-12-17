@@ -1,0 +1,68 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+  <h2>Signup</h2>
+  
+  <!-- نمایش فرم ثبت نام -->
+  <form method="POST">
+    {% csrf_token %}
+    
+    <!-- نمایش خطاهای فرم -->
+    {% if form.errors %}
+      <div class="errors">
+        <ul>
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+    
+    <!-- فیلد نام کاربری -->
+    <div class="form-group">
+      <label for="id_username">Username:</label>
+      {{ form.username }}
+    </div>
+    
+    <!-- فیلد نام -->
+    <div class="form-group">
+      <label for="id_first_name">First Name:</label>
+      {{ form.first_name }}
+    </div>
+    
+    <!-- فیلد نام خانوادگی -->
+    <div class="form-group">
+      <label for="id_last_name">Last Name:</label>
+      {{ form.last_name }}
+    </div>
+    
+    <!-- فیلد ایمیل -->
+    <div class="form-group">
+      <label for="id_email">Email:</label>
+      {{ form.email }}
+    </div>
+    
+    <!-- فیلد رمز عبور -->
+    <div class="form-group">
+      <label for="id_password1">Password:</label>
+      {{ form.password1 }}
+    </div>
+    
+    <!-- فیلد تایید رمز عبور -->
+    <div class="form-group">
+      <label for="id_password2">Confirm Password:</label>
+      {{ form.password2 }}
+    </div>
+    
+    <!-- دکمه ارسال فرم -->
+    <button type="submit">Sign Up</button>
+  </form>
+
+  <!-- نمایش پیغام موفقیت -->
+  {% if success %}
+    <p>Thank you for registering. Please check your email to confirm your registration.</p>
+  {% endif %}
+  
+{% endblock %}
