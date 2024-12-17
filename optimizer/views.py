@@ -27,11 +27,11 @@ from .tokens import account_activation_token
 from .forms import SignUpForm
 from .tokens import account_activation_token
 
-def home_view(request):
-    return render(request, 'home.html')
+# def home_view(request):
+#     return render(request, 'home.html')
 
 def activation_sent_view(request):
-    return render(request, 'activation_sent.html')
+    return render(request, 'templates/activation_sent.html')
 
 
 def activate(request, uidb64, token):
@@ -41,11 +41,15 @@ def activate(request, uidb64, token):
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
     if user is not None and account_activation_token.check_token(user, token):
+        #  if user.profile.signup_confirmation:
+        #       return redirect('login')
+        if user.profile.signup_confirmation:
+            return redirect('swagger') 
         user.is_active = True
         user.profile.signup_confirmation = True
         user.save()
         login(request, user)
-        return redirect('home')
+        return redirect('swagger')
     else:
         return render(request, 'activation_invalid.html')
 
@@ -64,10 +68,10 @@ def signup_view(request):
                current_site = get_current_site(request)
                subject = 'Please Activate Your Account'
 
-               message = render_to_string('activation_request.html', {
+               message = render_to_string('templates/activation_request.html', {
                 'user': user,
                 'domain': current_site.domain,
-                'uid': urlsafe_base64_decode(force_bytes(user.pk)),
+                'uid': urlsafe_base64_decode(force_bytes(user.pk)).decode(),
                 'token': account_activation_token.make_token(user),
             })
         user.email_user(subject, message)

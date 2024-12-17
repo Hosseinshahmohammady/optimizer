@@ -23,8 +23,8 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="contact@yourdomain.com"),
         license=openapi.License(name="BSD License"),
     ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
+    public=False,
+    permission_classes=(IsAuthenticated),
     authentication_classes=[JWTAuthentication],
 )
 
