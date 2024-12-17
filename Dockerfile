@@ -20,7 +20,11 @@ COPY requirements.txt .
 
 RUN pip install --upgrade pip && pip3 install -r requirements.txt
 
+RUN apt-get update && apt-get install -y gnupg
+
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138
+
+RUN sed -i 's/http:\/\/deb.debian.org/http:\/\/ftp.debian.org/g' /etc/apt/sources.list
 
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
