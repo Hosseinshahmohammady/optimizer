@@ -80,7 +80,7 @@ WORKDIR /app
 # RUN pip install wait-for-it
 
 # نصب wait-for-it
-RUN apt-get update && apt-get install -y wait-for-it
+# RUN apt-get update && apt-get install -y wait-for-it
 
 
 COPY requirements.txt .
@@ -117,6 +117,6 @@ COPY . /app/
 
 EXPOSE 8000
 
-# RUN apt-get update && apt-get install -y wait-for-it
+RUN apt-get update && apt-get install -y wait-for-it
 
 CMD ["sh", "-c", "/app/wait-for-it.sh db:5432 -- python manage.py runserver 0.0.0.0:8000"]
