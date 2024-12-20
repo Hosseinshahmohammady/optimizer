@@ -40,5 +40,6 @@ path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_ref
 path('signup/', signup_view, name="signup"),
 path('sent/', activation_sent_view, name="activation_sent"),
 path('activate/<slug:uidb64>/<slug:token>/', activate, name='activate'),
+path('resend-activation/', views.resend_activation_view, name='resend_activation'),
 
 ]
