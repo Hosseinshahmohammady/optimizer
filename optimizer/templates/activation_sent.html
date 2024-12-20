@@ -1,0 +1,10 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+  <div class="container">
+    <h1>Account Activation</h1>
+    <p>An email has been sent to <strong>{{ user.email }}</strong> with instructions to activate your account.</p>
+    <p>Please check your inbox and follow the instructions to activate your account.</p>
+    <p>If you didn't receive the email, please <a href="{% url 'resend_activation' %}">click here to resend the activation link</a>.</p>
+  </div>
+{% endblock %}
