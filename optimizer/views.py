@@ -30,8 +30,8 @@ from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 
 
-# def home_view(request):
-#     return render(request, 'home.html')
+def home_view(request):
+    return render(request, 'Home_optimize.html')
 
 def activation_sent_view(request):
     return render(request, 'activation_sent.html')
