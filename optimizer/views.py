@@ -65,25 +65,30 @@ def signup_view(request):
             user.profile.last_name = form.cleaned_data.get('last_name')
             user.profile.email = form.cleaned_data.get('email')
 
-            user.is_active = False
-            user.save()
+            # user.is_active = False
+            # user.save()
 
-            current_site = get_current_site(request)
-            subject = 'Please Activate Your Account'
+            # current_site = get_current_site(request)
+            # subject = 'Please Activate Your Account'
 
-            message = render_to_string('activation_request.html', {
-                'user': user,
-                'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(smart_bytes(user.pk)),
-                'token': account_activation_token.make_token(user),
-            })
+            # message = render_to_string('activation_request.html', {
+            #     'user': user,
+            #     'domain': current_site.domain,
+            #     'uid': urlsafe_base64_encode(smart_bytes(user.pk)),
+            #     'token': account_activation_token.make_token(user),
+            # })
+    #         user.email_user(subject, message)  
+    #         return redirect('activation_sent')
+    # else:
+    #     form = SignUpForm()
+    # return render(request, 'signup.html', {'form': form})
 
-            user.email_user(subject, message)  
-            return redirect('activation_sent')
-    else:
-        form = SignUpForm()
-    return render(request, 'signup.html', {'form': form})
 
+            return render(request, 'request_successful.html', {'user': user})
+        else:
+            form = SignUpForm()
+    
+        return render(request, 'signup.html', {'form': form})
 
 def resend_activation_view(request):
     if request.method == 'POST':
@@ -92,7 +97,7 @@ def resend_activation_view(request):
             user = User.objects.get(email=email)
             # ارسال ایمیل فعال‌سازی مجدد
             token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            uid = urlsafe_base64_encode(smart_bytes(user.pk))
 
             activation_link = f"http://{get_current_site(request).domain}/activate/{uid}/{token}/"
             send_mail(

@@ -1,0 +1,14 @@
+{% autoescape off %}
+Hi {{ user.username }},
+
+<h1>Congratulations, your profile has been successfully created!!!</h1>
+
+You can now click the following link to Home Optimize or Login:
+
+<a href="{% url 'home_optimize'%}">
+    <button type="submit">Home Optimize</button>
+    </a>
+    <br>
+    <button type="submit">Login</button>
+{% endautoescape %}
+
