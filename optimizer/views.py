@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.core.files.storage import default_storage
 from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from rest_framework import status
 from rest_framework.views import APIView
@@ -35,7 +35,7 @@ def activation_sent_view(request):
 
 def activate(request, uidb64, token):
     try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
+        uid = force_str(urlsafe_base64_encode(uidb64))
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
@@ -53,32 +53,35 @@ def activate(request, uidb64, token):
         return render(request, 'activation_invalid.html')
 
 def signup_view(request):
-    if request.method  == 'POST':
+    if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-               user = form.save()
-               user.refresh_from.db()
-               user.profile.first_name = form.cleaned_data.get('first_name')
-               user.profile.last_name = form.cleaned_data.get('last_name')
-               user.profile.email = form.cleaned_data.get('email')
+            user = form.save()
+            user.refresh_from_db()
+            user.profile.first_name = form.cleaned_data.get('first_name')
+            user.profile.last_name = form.cleaned_data.get('last_name')
+            user.profile.email = form.cleaned_data.get('email')
 
-               user.is_active = False
-               user.save()
-               current_site = get_current_site(request)
-               subject = 'Please Activate Your Account'
+            user.is_active = False
+            user.save()
 
-               message = render_to_string('activation_request.html', {
+            current_site = get_current_site(request)
+            subject = 'Please Activate Your Account'
+
+            message = render_to_string('activation_request.html', {
                 'user': user,
                 'domain': current_site.domain,
                 'uid': urlsafe_base64_decode(force_bytes(user.pk)).decode(),
                 'token': account_activation_token.make_token(user),
             })
-        user.email_user(subject, message)
-        return redirect('activation_sent')
+
+            user.email_user(subject, message)  
+            return redirect('activation_sent')
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
 
+    return render(request, 'signup.html', {'form': form})
 class ObtainJWTTokenView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
