@@ -8,8 +8,8 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.core.files.storage import default_storage
 from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import smart_bytes
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
@@ -26,6 +26,9 @@ from io import BytesIO
 from .tokens import account_activation_token
 from .forms import SignUpForm
 from .tokens import account_activation_token
+from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
+
 
 # def home_view(request):
 #     return render(request, 'home.html')
@@ -71,7 +74,7 @@ def signup_view(request):
             message = render_to_string('activation_request.html', {
                 'user': user,
                 'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'uid': urlsafe_base64_encode(smart_bytes(user.pk)),
                 'token': account_activation_token.make_token(user),
             })
 
@@ -81,31 +84,6 @@ def signup_view(request):
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
 
-class ObtainJWTTokenView(APIView):
-    permission_classes = [AllowAny]
-    def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
-
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
-            return JsonResponse({
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-            }, status=status.HTTP_200_OK)
-        
-        return JsonResponse({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-    
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.core.mail import send_mail
-from django.conf import settings
-from django.contrib.sites.shortcuts import get_current_site
-from django.utils.http import urlsafe_base64_encode, force_bytes
-from django.template.loader import render_to_string
-from django.contrib.auth.tokens import default_token_generator
 
 def resend_activation_view(request):
     if request.method == 'POST':
@@ -133,6 +111,23 @@ def resend_activation_view(request):
 
 
 
+class ObtainJWTTokenView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            return JsonResponse({
+                'access_token': str(refresh.access_token),
+                'refresh_token': str(refresh),
+            }, status=status.HTTP_200_OK)
+        
+        return JsonResponse({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+    
 
 class OptimizeImageView(APIView):
      permission_classes = [IsAuthenticated]
