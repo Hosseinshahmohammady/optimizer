@@ -81,7 +81,6 @@ def signup_view(request):
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
 
-    return render(request, 'signup.html', {'form': form})
 class ObtainJWTTokenView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
@@ -98,6 +97,40 @@ class ObtainJWTTokenView(APIView):
             }, status=status.HTTP_200_OK)
         
         return JsonResponse({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.http import urlsafe_base64_encode, force_bytes
+from django.template.loader import render_to_string
+from django.contrib.auth.tokens import default_token_generator
+
+def resend_activation_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        try:
+            user = User.objects.get(email=email)
+            # ارسال ایمیل فعال‌سازی مجدد
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+            activation_link = f"http://{get_current_site(request).domain}/activate/{uid}/{token}/"
+            send_mail(
+                'Account Activation',
+                f'Click the following link to activate your account: {activation_link}',
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+            )
+            return redirect('activation_sent')  # بعد از ارسال موفق، به صفحه "activation_sent" بروید
+        except User.DoesNotExist:
+            # اگر کاربر پیدا نشد، ممکن است بخواهید پیامی به کاربر بدهید
+            pass
+
+    return render(request, 'resend_activation.html')
+
+
 
 
 
