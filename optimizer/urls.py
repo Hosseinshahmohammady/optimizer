@@ -37,7 +37,7 @@ path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-s
 path('swagger.yaml', schema_view.without_ui(cache_timeout=0), name='swagger-yaml'),
 path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
 path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
-path('Home_optimize/', home_view, name='Home_optimize')
+path('Home_optimize/', home_view, name='Home_optimize'),
 path('signup/', signup_view, name="signup"),
 path('sent/', activation_sent_view, name="activation_sent"),
 path('activate/<slug:uidb64>/<slug:token>/', activate, name='activate'),
