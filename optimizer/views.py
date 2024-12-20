@@ -85,10 +85,14 @@ def signup_view(request):
 
 
             return render(request, 'request_successful.html', {'user': user})
+        
         else:
+                return render(request, 'signup.html', {'form': form})
+
+    else:
             form = SignUpForm()
     
-        return render(request, 'signup.html', {'form': form})
+    return render(request, 'signup.html', {'form': form})
 
 def resend_activation_view(request):
     if request.method == 'POST':
