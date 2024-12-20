@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.core.files.storage import default_storage
 from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from rest_framework import status
 from rest_framework.views import APIView
@@ -71,7 +71,7 @@ def signup_view(request):
             message = render_to_string('activation_request.html', {
                 'user': user,
                 'domain': current_site.domain,
-                'uid': urlsafe_base64_decode(force_bytes(user.pk)).decode(),
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),
                 'token': account_activation_token.make_token(user),
             })
 
