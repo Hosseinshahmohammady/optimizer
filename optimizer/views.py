@@ -31,7 +31,7 @@ from django.contrib.auth.tokens import default_token_generator
 
 
 def home_view(request):
-    return render(request, 'Home_optimize.html')
+    return render(request, 'home_optimize.html')
 
 def activation_sent_view(request):
     return render(request, 'activation_sent.html')
