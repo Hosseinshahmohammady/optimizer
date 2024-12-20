@@ -29,6 +29,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+path('home_optimize/', home_view, name='home_optimize'),
 path('optimize/', OptimizeImageView.as_view(), name='optimize_image'),
 path('show_image/<int:pk>/', views.show_image, name='show_image'),
 # path('image/<int:pk>/', views.show_image, name='show_image'),
@@ -37,10 +38,9 @@ path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-s
 path('swagger.yaml', schema_view.without_ui(cache_timeout=0), name='swagger-yaml'),
 path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
 path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
-path('home_optimize/', views.home_view, name='home_optimize'),
 path('signup/', signup_view, name="signup"),
-path('sent/', activation_sent_view, name="activation_sent"),
-path('activate/<slug:uidb64>/<slug:token>/', activate, name='activate'),
-path('resend-activation/', views.resend_activation_view, name='resend_activation'),
+# path('sent/', activation_sent_view, name="activation_sent"),
+# path('activate/<slug:uidb64>/<slug:token>/', activate, name='activate'),
+# path('resend-activation/', views.resend_activation_view, name='resend_activation'),
 
 ]
