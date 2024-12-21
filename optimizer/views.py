@@ -47,7 +47,7 @@ def login_view(request):
              user = authenticate(username=username, password=password)
              if user is not None:
                   login(request, user)
-                  return redirect('swagger')
+                  return redirect('home_optimize')
              else:
                 form.add_error(None, "Invalid login credentials.")
     
