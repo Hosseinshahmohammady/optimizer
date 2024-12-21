@@ -1,15 +1,8 @@
-from django.contrib.sites.shortcuts import get_current_site
-from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRedirect
-from django.utils.encoding import force_str
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.http import HttpResponse
 from django.conf import settings
 from django.contrib.auth import authenticate, login
-from django.core.files.storage import default_storage
-from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import smart_bytes
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
@@ -17,43 +10,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 from .seializers import ImageUploadSerializer
 import os
 import cv2
 import numpy as np
-from io import BytesIO
-from .tokens import account_activation_token
-from .forms import SignUpForm
-from .tokens import account_activation_token
-from django.core.mail import send_mail
-from django.contrib.auth.tokens import default_token_generator
-
+from .forms import SignUpForm, LoginForm
+from django.shortcuts import render, redirect
 
 def home_view(request):
     return render(request, 'home_optimize.html')
-
-def activation_sent_view(request):
-    return render(request, 'activation_sent.html')
-
-def activate(request, uidb64, token):
-    try:
-        uid = force_str(urlsafe_base64_encode(uidb64))
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-    if user is not None and account_activation_token.check_token(user, token):
-        #  if user.profile.signup_confirmation:
-        #       return redirect('login')
-        if user.profile.signup_confirmation:
-            return redirect('swagger') 
-        user.is_active = True
-        user.profile.signup_confirmation = True
-        user.save()
-        login(request, user)
-        return redirect('swagger')
-    else:
-        return render(request, 'activation_invalid.html')
 
 def signup_view(request):
     if request.method == 'POST':
@@ -65,59 +30,31 @@ def signup_view(request):
             user.profile.last_name = form.cleaned_data.get('last_name')
             user.profile.email = form.cleaned_data.get('email')
 
-            # user.is_active = False
-            # user.save()
-
-            # current_site = get_current_site(request)
-            # subject = 'Please Activate Your Account'
-
-            # message = render_to_string('activation_request.html', {
-            #     'user': user,
-            #     'domain': current_site.domain,
-            #     'uid': urlsafe_base64_encode(smart_bytes(user.pk)),
-            #     'token': account_activation_token.make_token(user),
-            # })
-    #         user.email_user(subject, message)  
-    #         return redirect('activation_sent')
-    # else:
-    #     form = SignUpForm()
-    # return render(request, 'signup.html', {'form': form})
-
-
             return render(request, 'request_successful.html', {'user': user})
-        
         else:
                 return render(request, 'signup.html', {'form': form})
-
     else:
             form = SignUpForm()
-    
     return render(request, 'signup.html', {'form': form})
 
-def resend_activation_view(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        try:
-            user = User.objects.get(email=email)
-            # ارسال ایمیل فعال‌سازی مجدد
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(smart_bytes(user.pk))
 
-            activation_link = f"http://{get_current_site(request).domain}/activate/{uid}/{token}/"
-            send_mail(
-                'Account Activation',
-                f'Click the following link to activate your account: {activation_link}',
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-            )
-            return redirect('activation_sent')  # بعد از ارسال موفق، به صفحه "activation_sent" بروید
-        except User.DoesNotExist:
-            # اگر کاربر پیدا نشد، ممکن است بخواهید پیامی به کاربر بدهید
-            pass
+def login_view(request):
+     if request.method == 'POST':
+        form = LoginForm(request=request, data= request.POST)
+        if form.is_valid():
+             username = form.cleaned_data.get('username')
+             password = form.cleaned_data.get('passworod')
+             user = authenticate(username=username, password=password)
+             if user is not None:
+                  login(request, user)
+                  return redirect('swagger')
+             else :
+                  form.add_error(None, "Invalid login credentials.")
 
-    return render(request, 'resend_activation.html')
-
-
+        else :
+             form = LoginForm()
+             return render(request, 'login.html', {'form': form})
+             
 
 
 class ObtainJWTTokenView(APIView):

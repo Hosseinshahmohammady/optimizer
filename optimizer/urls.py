@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import OptimizeImageView, signup_view, activation_sent_view, activate, home_view
+from .views import OptimizeImageView, signup_view, home_view, login_view
 from .import views
 
 from rest_framework import permissions
@@ -39,8 +39,5 @@ path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_p
 path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
 path('home_optimize/', home_view, name='home_optimize'),
 path('signup/', signup_view, name="signup"),
-# path('sent/', activation_sent_view, name="activation_sent"),
-# path('activate/<slug:uidb64>/<slug:token>/', activate, name='activate'),
-# path('resend-activation/', views.resend_activation_view, name='resend_activation'),
-
+path('login/', login_view, name='login')
 ]

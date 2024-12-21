@@ -136,7 +136,7 @@ MEDIA_URL = '/media/'
 # EMAIL_HOST_PASSWORD = 'your-email-password'
 # DEFAULT_FROM_EMAIL = 'your-email@gmail.com'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 from datetime import timedelta
 
