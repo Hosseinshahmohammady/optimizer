@@ -20,23 +20,6 @@ from django.shortcuts import render, redirect
 def home_view(request):
     return render(request, 'home_optimize.html')
 
-def signup_view(request):
-    if request.method == 'POST':
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            user.refresh_from_db()
-            user.profile.first_name = form.cleaned_data.get('first_name')
-            user.profile.last_name = form.cleaned_data.get('last_name')
-            user.profile.email = form.cleaned_data.get('email')
-
-            return render(request, 'request_successful.html', {'user': user})
-        else:
-                return render(request, 'signup.html', {'form': form})
-    else:
-            form = SignUpForm()
-    return render(request, 'signup.html', {'form': form})
-
 
 def login_view(request):
      if request.method == 'POST':
@@ -56,6 +39,24 @@ def login_view(request):
             form = LoginForm()  
 
         return render(request, 'login.html', {'form': form})
+     
+
+def signup_view(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            user.refresh_from_db()
+            user.profile.first_name = form.cleaned_data.get('first_name')
+            user.profile.last_name = form.cleaned_data.get('last_name')
+            user.profile.email = form.cleaned_data.get('email')
+
+            return render(request, 'request_successful.html', {'user': user})
+        else:
+                return render(request, 'signup.html', {'form': form})
+    else:
+            form = SignUpForm()
+    return render(request, 'signup.html', {'form': form})
 
 
 class ObtainJWTTokenView(APIView):
