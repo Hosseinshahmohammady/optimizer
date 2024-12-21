@@ -49,11 +49,10 @@ def login_view(request):
                   login(request, user)
                   return redirect('swagger')
              else :
-                  form.add_error(None, "Invalid login credentials.")
-
+                  return render(request, 'login.html', {'form': form})
         else :
              form = LoginForm()
-             return render(request, 'login.html', {'form': form})
+        return render(request, 'login.html', {'form': form})
              
 
 
