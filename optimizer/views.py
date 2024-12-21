@@ -48,12 +48,13 @@ def login_view(request):
              if user is not None:
                   login(request, user)
                   return redirect('swagger')
-             else :
-                  form.add_error(None, "Invalid login credentials.")
-        else :
-             form = LoginForm()
+             else:
+                form.add_error(None, "Invalid login credentials.")
+    
+        else:
+            form = LoginForm()  
+
         return render(request, 'login.html', {'form': form})
-             
 
 
 class ObtainJWTTokenView(APIView):
