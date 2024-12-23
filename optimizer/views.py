@@ -20,27 +20,6 @@ from django.shortcuts import render, redirect
 def home_view(request):
     return render(request, 'home_optimize.html')
 
-
-def login_view(request):
-     if request.method == 'POST':
-        form = LoginForm(request=request, data= request.POST)
-        if form.is_valid():
-             username = form.cleaned_data.get('username')
-             password = form.cleaned_data.get('password')
-             user = authenticate(username=username, password=password)
-             if user is not None:
-                  login(request, user)
-                  return redirect('swagger')
-             else:
-                if not form.is_valid():
-                    form.add_error(None, "Invalid login credentials.")
-    
-        else:
-            form = LoginForm()  
-
-        return render(request, 'login.html', {'form': form})
-     
-
 def signup_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
@@ -58,6 +37,27 @@ def signup_view(request):
             form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
 
+
+def login_view(request):
+     if request.method == 'POST':
+        form = LoginForm(request=request, data= request.POST)
+        if form.is_valid():
+             username = form.cleaned_data.get('username')
+             password = form.cleaned_data.get('password')
+             user = authenticate(username=username, password=password)
+             if user is not None:
+                  login(request, user)
+                  return redirect('swagger')
+             else:
+                form.add_error(None, "Invalid login credentials.")
+        else:
+            return render(request, 'login.html', {'form': form})
+
+     else:
+        form = LoginForm()
+
+        return render(request, 'login.html', {'form': form})
+     
 
 class ObtainJWTTokenView(APIView):
     permission_classes = [AllowAny]
