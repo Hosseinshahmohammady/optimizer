@@ -60,7 +60,7 @@ def login_view(request):
      
 
 class ObtainJWTTokenView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny)
     def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
