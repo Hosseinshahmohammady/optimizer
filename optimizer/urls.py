@@ -25,7 +25,7 @@ schema_view = get_schema_view(
     ),
     public=True,
     permission_classes=[IsAuthenticated],
-    authentication_classes=[JWTAuthentication],
+    authentication_classes=[],
 )
 
 urlpatterns = [
