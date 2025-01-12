@@ -117,7 +117,7 @@ class OptimizeImageView(APIView):
                 return JsonResponse({'error': str(e)}, status=400)
         
         if grayscale:
-             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         if width and height:
              try:
