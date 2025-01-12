@@ -13,6 +13,8 @@ class ImageUploadSerializer(serializers.Serializer):
     rotation = serializers.IntegerField(required=False, default=0)
     gaussian_blur = serializers.CharField(required=False, allow_blank=True)
     histogram_equalization = serializers.BooleanField(required=False, default=False)
+    contrast = serializers.FloatField(required=False, min_value=-100, max_value=100, default=0)  
+    brightness = serializers.FloatField(required=False, min_value=-100, max_value=100, default=0)
 
     def validate_quality(self, value):
         if value is None:

@@ -104,6 +104,8 @@ class OptimizeImageView(APIView):
         rotation_angle = serializer.validated_data.get('rotation')
         gaussian_blur = serializer.validated_data.get('gaussian_blur')
         histogram_equalization = serializer.validated_data.get('histogram_equalization')
+        contrast = serializer.validated_data.get('contrast')
+        brightness = serializer.validated_data.get('brightness')
 
         try:    
             quality = int(quality)
@@ -167,11 +169,17 @@ class OptimizeImageView(APIView):
                 img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
             except ValueError:
                 return JsonResponse({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
+                
+        if contrast or brightness:
+            contrast = float(contrast) if contrast else 1.0
+            brightness = int(brightness) if brightness else 0
+            img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
             
         if histogram_equalization:
             if len(img.shape) == 3:  
                 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
-                img = cv2.equalizeHist(img_gray)  
+                img = cv2.equalizeHist(img_gray)
+                img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
             else:
                 img = cv2.equalizeHist(img)
 
