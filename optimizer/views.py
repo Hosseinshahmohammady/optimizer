@@ -141,6 +141,7 @@ class OptimizeImageView(APIView):
         if format_choice == 'jpeg':
              encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
              result, img_encoded = cv2.imencode('.jpg', img, encode_param)
+
         elif format_choice == 'png':
              result, img_encoded = cv2.imencode('.png', img)
 
@@ -167,7 +168,7 @@ class OptimizeImageView(APIView):
         existing_files = os.listdir(media_path)
         pk = len(existing_files) + 1
 
-        file_name = f'id={pk}.jpg'
+        file_name = f'id={pk}.{format_choice}'
         file_path = os.path.join(media_path, file_name)
 
         with open(file_path, 'wb') as f:
