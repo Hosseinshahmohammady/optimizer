@@ -94,13 +94,10 @@ class OptimizeImageView(APIView):
         if not image: 
             return JsonResponse({'error': 'No image exist'}, status=400)
         
-        # quality = request.data.get('quality')
-        # if quality is None:
-        #     return JsonResponse({'error': 'Quality is required'}, status=400)
-
         quality = serializer.validated_data.get('quality')
         width = serializer.validated_data.get('width')
         height = serializer.validated_data.get('height')
+        grayscale = serializer.validated_data.get('grayscale')
 
         try:    
             quality = int(quality)
@@ -118,6 +115,9 @@ class OptimizeImageView(APIView):
                 raise ValueError("The image could not be decoded.")
         except Exception as e:    
                 return JsonResponse({'error': str(e)}, status=400)
+        
+        if grayscale:
+             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         if width and height:
              try:
