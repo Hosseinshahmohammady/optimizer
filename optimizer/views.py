@@ -100,6 +100,8 @@ class OptimizeImageView(APIView):
         grayscale = serializer.validated_data.get('grayscale')
         denoise = serializer.validated_data.get('denoise')
         edge_detection = serializer.validated_data.get('edge_detection')
+        cropping = serializer.validated_data.get('cropping')
+        rotation_angle = serializer.validated_data.get('rotation')
 
         try:    
             quality = int(quality)
@@ -128,7 +130,24 @@ class OptimizeImageView(APIView):
         if edge_detection:
              img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
              edges = cv2.Canny(img, 100, 200)
-             img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)     
+             img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+
+        if cropping:
+              try:
+                  x_start, y_start, x_end, y_end = map(int, cropping.split(','))
+                  img = img[y_start:y_start, x_start:x_end]
+              except Exception as e:
+                   return JsonResponse({'erorr': "Invalid cropping data"}, status=400)
+
+        if rotation_angle:
+             try:
+                  rotation_angle = float(rotation_angle)
+                  rows, cols = img.shape[ :2]
+                  center = (cols / 2, rows / 2)
+                  rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
+                  img = cv2.warpAffine(img, rotation_matrix, (cols, rows))
+             except ValueError:
+                  return JsonResponse({"invalid rotation angle"}, status=400)           
 
         if width and height:
              try:

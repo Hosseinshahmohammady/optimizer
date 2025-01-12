@@ -9,6 +9,8 @@ class ImageUploadSerializer(serializers.Serializer):
     denoise = serializers.BooleanField(required=False, default=False)
     edge_detection = serializers.BooleanField(required=False, default=False)
     format = serializers.ChoiceField(choices=['jpeg', 'png', 'bmb', 'webp', 'tiff'], default='jpeg')
+    cropping = serializers.CharField(required=False)
+    rotation = serializers.IntegerField(required=False, defualt=0)
 
     def validate_quality(self, value):
         if value is None:
