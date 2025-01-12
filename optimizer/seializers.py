@@ -7,6 +7,7 @@ class ImageUploadSerializer(serializers.Serializer):
     height = serializers.IntegerField(required=False, min_value=1)
     grayscale = serializers.BooleanField(required=False, default=False)
     denoise = serializers.BooleanField(required=False, default=False)
+    edge_detection = serializers.BooleanField(required=False, default=False)
 
     def validate_quality(self, value):
         if value is None:
