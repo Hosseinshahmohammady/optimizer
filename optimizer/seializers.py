@@ -8,6 +8,9 @@ class ImageUploadSerializer(serializers.Serializer):
         default=85
     )
 
+    width = serializers.IntegerField(required=False, min_value=1)
+    height = serializers.IntegerField(required=False, min_value=1)
+
     def validate_quality(self, value):
         if value is None:
             raise serializers.ValidationError("Quality is required")

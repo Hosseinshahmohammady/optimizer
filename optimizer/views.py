@@ -94,9 +94,13 @@ class OptimizeImageView(APIView):
         if not image: 
             return JsonResponse({'error': 'No image exist'}, status=400)
         
-        quality = request.data.get('quality')
-        if quality is None:
-            return JsonResponse({'error': 'Quality is required'}, status=400)
+        # quality = request.data.get('quality')
+        # if quality is None:
+        #     return JsonResponse({'error': 'Quality is required'}, status=400)
+
+        quality = serializer.validated_data.get('quality')
+        width = serializer.validated_data.get('width')
+        height = serializer.validated_data.get('height')
 
         try:    
             quality = int(quality)
@@ -115,7 +119,14 @@ class OptimizeImageView(APIView):
         except Exception as e:    
                 return JsonResponse({'error': str(e)}, status=400)
 
-            
+        if width and height:
+             try:
+                  width = int(width)
+                  height = int(height)
+                  img = cv2.resize(img, (width, height))
+             except ValueError:
+                  return JsonResponse({'error': 'Width and Height must be valid integers'}, status=400) 
+
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
         result, img_encoded = cv2.imencode('.jpg', img, encode_param)
         if not result:
