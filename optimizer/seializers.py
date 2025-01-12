@@ -5,7 +5,7 @@ class ImageUploadSerializer(serializers.Serializer):
     quality = serializers.IntegerField(min_value=1, max_value=100, default=85)
     width = serializers.IntegerField(required=False, min_value=1)
     height = serializers.IntegerField(required=False, min_value=1)
-    grascale = serializers.BooleanField(required=False, default=False)
+    grayscale = serializers.BooleanField(required=False, default=False)
 
     def validate_quality(self, value):
         if value is None:
