@@ -8,6 +8,7 @@ class ImageUploadSerializer(serializers.Serializer):
     grayscale = serializers.BooleanField(required=False, default=False)
     denoise = serializers.BooleanField(required=False, default=False)
     edge_detection = serializers.BooleanField(required=False, default=False)
+    format = serializers.ChoiceField(choices=['jpeg', 'png', 'bmb', 'webp', 'tiff'], default='jpeg')
 
     def validate_quality(self, value):
         if value is None:

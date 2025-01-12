@@ -93,7 +93,7 @@ class OptimizeImageView(APIView):
         image = serializer.validated_data.get('image')
         if not image: 
             return JsonResponse({'error': 'No image exist'}, status=400)
-        
+        format_choice = serializer.validated_data.get('format')
         quality = serializer.validated_data.get('quality')
         width = serializer.validated_data.get('width')
         height = serializer.validated_data.get('height')
@@ -117,6 +117,7 @@ class OptimizeImageView(APIView):
                 raise ValueError("The image could not be decoded.")
         except Exception as e:    
                 return JsonResponse({'error': str(e)}, status=400)
+                     
         
         if grayscale:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -137,11 +138,27 @@ class OptimizeImageView(APIView):
              except ValueError:
                   return JsonResponse({'error': 'Width and Height must be valid integers'}, status=400) 
 
-        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-        result, img_encoded = cv2.imencode('.jpg', img, encode_param)
+        if format_choice == 'jpeg':
+             encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+             result, img_encoded = cv2.imencode('.jpg', img, encode_param)
+        elif format_choice == 'png':
+             result, img_encoded = cv2.imencode('.png', img)
+
+        elif format_choice == 'bmb':
+             result, img_encoded = cv2.imencode('.bmb', img)
+
+        elif format_choice == 'webp':
+             result, img_encoded = cv2.imencode('.webp', img)
+
+        elif format_choice == 'tiff':
+             result, img_encoded = cv2.imencode('.tiff', img)
+
+        else:
+             raise ValueError("Unsupported format")
+        
         if not result:
-            raise ValueError("The image could not be compressed.")
-    
+             raise ValueError("The image could not be encoded.")
+        
         
         media_path = settings.MEDIA_ROOT
         if not os.path.exists(media_path):
