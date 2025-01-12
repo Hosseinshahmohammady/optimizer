@@ -135,7 +135,7 @@ class OptimizeImageView(APIView):
         if cropping:
               try:
                   x_start, y_start, x_end, y_end = map(int, cropping.split(','))
-                  img = img[y_start:y_start, x_start:x_end]
+                  img = img[y_start:y_end, x_start:x_end]
               except Exception as e:
                    return JsonResponse({'erorr': "Invalid cropping data"}, status=400)
 
