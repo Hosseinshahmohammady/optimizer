@@ -98,6 +98,7 @@ class OptimizeImageView(APIView):
         width = serializer.validated_data.get('width')
         height = serializer.validated_data.get('height')
         grayscale = serializer.validated_data.get('grayscale')
+        denoise = serializer._validated_data.get('denoise')
 
         try:    
             quality = int(quality)
@@ -118,6 +119,9 @@ class OptimizeImageView(APIView):
         
         if grayscale:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        if denoise:
+             img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
 
         if width and height:
              try:
