@@ -11,6 +11,7 @@ class ImageUploadSerializer(serializers.Serializer):
     format = serializers.ChoiceField(choices=['jpeg', 'png', 'bmb', 'webp', 'tiff'], default='jpeg')
     cropping = serializers.CharField(required=False)
     rotation = serializers.IntegerField(required=False, default=0)
+    gaussian_blur = serializers.CharField(required=False, allow_blank=True)
 
     def validate_quality(self, value):
         if value is None:
