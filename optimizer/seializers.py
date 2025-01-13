@@ -3,7 +3,7 @@ from rest_framework import serializers
 class ImageUploadSerializer(serializers.Serializer):
     image = serializers.ImageField(required=True)
     image2 = serializers.ImageField(required=False)
-    quality = serializers.IntegerField(required=False, min_value=1, max_value=100, default=85)
+    quality = serializers.IntegerField(required=False, min_value=1, max_value=100)
     width = serializers.IntegerField(required=False, min_value=1)
     height = serializers.IntegerField(required=False, min_value=1)
     grayscale = serializers.BooleanField(required=False, default=False)
@@ -18,6 +18,13 @@ class ImageUploadSerializer(serializers.Serializer):
     brightness = serializers.FloatField(required=False, min_value=-100, max_value=100, default=0)
     corner_detection = serializers.BooleanField(required=False, default=False)
     Identify_features = serializers.BooleanField(required=False, default=False)
+    translate_x = serializers.IntegerField(required=False, default=0)
+    translate_y = serializers.IntegerField(required=False, default=0)
+    scale_x = serializers.FloatField(required=False, default=1.0)
+    scale_y = serializers.FloatField(required=False, default=1.0)
+    shear_x = serializers.FloatField(required=False, default=0.0)
+    shear_y = serializers.FloatField(required=False, default=0.0)
+
 
 
     def validate_quality(self, value):
