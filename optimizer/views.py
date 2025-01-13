@@ -93,6 +93,9 @@ class OptimizeImageView(APIView):
         image = serializer.validated_data.get('image')
         if not image: 
             return JsonResponse({'error': 'No image exist'}, status=400)
+        image2 = serializer.validated_data.get('image2')
+        if not image2: 
+            return JsonResponse({'error': 'No image exist'}, status=400)
         format_choice = serializer.validated_data.get('format')
         quality = serializer.validated_data.get('quality')
         width = serializer.validated_data.get('width')
@@ -123,6 +126,15 @@ class OptimizeImageView(APIView):
             nparr = np.frombuffer(file_data, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             if img is None:
+                raise ValueError("The image could not be decoded.")
+        except Exception as e:    
+                return JsonResponse({'error': str(e)}, status=400)
+        
+        try:
+            file_data2 = image2.read()
+            nparr2 = np.frombuffer(file_data2, np.uint8)
+            img2 = cv2.imdecode(nparr2, cv2.IMREAD_COLOR)
+            if img2 is None:
                 raise ValueError("The image could not be decoded.")
         except Exception as e:    
                 return JsonResponse({'error': str(e)}, status=400)
@@ -194,10 +206,16 @@ class OptimizeImageView(APIView):
              img[dst > 0.01 * dst.max()] = [0, 0, 225]
 
         if Identify_features:
-             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+             gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+             gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
              sift = cv2.SIFT_create()
-             keypoints, descriptors = sift.detectAndCompute(gray, None)
-             img_with_keypoints = cv2.drawKeypoints(img, keypoints, None)
+             keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
+             keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
+             bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+             matches = bf.match(descriptors1, descriptors2)
+             matches = sorted(matches, key = lambda x:x.distance)
+             image_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:10], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+             
             #  #SURF
             #  gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             #  surf = cv2.xfeatures2d.SURF_create()

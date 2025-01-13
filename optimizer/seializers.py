@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 class ImageUploadSerializer(serializers.Serializer):
     image = serializers.ImageField(required=True)
+    image2 = serializers.ImageField(required=False)
     quality = serializers.IntegerField(min_value=1, max_value=100, default=85)
     width = serializers.IntegerField(required=False, min_value=1)
     height = serializers.IntegerField(required=False, min_value=1)
