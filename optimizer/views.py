@@ -91,11 +91,31 @@ class OptimizeImageView(APIView):
                 return JsonResponse({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
      
         image = serializer.validated_data.get('image')
-        if not image: 
-            return JsonResponse({'error': 'No image exist'}, status=400)
         image2 = serializer.validated_data.get('image2')
-        # if not image2: 
-        #     return JsonResponse({'error': 'No image exist'}, status=400)
+        if not image and not image2:
+            return JsonResponse({'error': 'At least one image must be provided'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if image:
+                file_data = image.read()
+                nparr = np.frombuffer(file_data, np.uint8)
+                img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                if img is None:
+                    raise ValueError("The image could not be decoded.")
+            else:
+                img = None
+
+            if image2:
+                file_data2 = image2.read()
+                nparr2 = np.frombuffer(file_data2, np.uint8)
+                img2 = cv2.imdecode(nparr2, cv2.IMREAD_COLOR)
+                if img2 is None:
+                    raise ValueError("The second image could not be decoded.")
+            else:
+                img2 = None
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+                     
         format_choice = serializer.validated_data.get('format')
         quality = serializer.validated_data.get('quality')
         width = serializer.validated_data.get('width')
@@ -121,24 +141,6 @@ class OptimizeImageView(APIView):
                 return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
 
         
-        try:
-            file_data = image.read()
-            nparr = np.frombuffer(file_data, np.uint8)
-            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            if img is None:
-                raise ValueError("The image could not be decoded.")
-        except Exception as e:    
-                return JsonResponse({'error': str(e)}, status=400)
-        
-        try:
-            file_data2 = image2.read()
-            nparr2 = np.frombuffer(file_data2, np.uint8)
-            img2 = cv2.imdecode(nparr2, cv2.IMREAD_COLOR)
-            if img2 is None:
-                raise ValueError("The image could not be decoded.")
-        except Exception as e:    
-                return JsonResponse({'error': str(e)}, status=400)
-                     
         
         if grayscale:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
