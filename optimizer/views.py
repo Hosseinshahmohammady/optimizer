@@ -107,6 +107,8 @@ class OptimizeImageView(APIView):
         contrast = serializer.validated_data.get('contrast')
         brightness = serializer.validated_data.get('brightness')
         corner_detection = serializer.validated_data.get('corner_detection')
+        Identify_features = serializer.validated_data.get('Identify_features')
+
 
         try:    
             quality = int(quality)
@@ -190,6 +192,18 @@ class OptimizeImageView(APIView):
              dst = cv2.cornerHarris(gray, 2, 3, 0.04)
              dst = cv2.dilate(dst, None)
              img[dst > 0.01 * dst.max()] = [0, 0, 225]
+
+        if Identify_features:
+             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+             sift = cv2.SIFT_create()
+             keypoints, descriptors = sift.detectAndCompute(gray, None)
+             img_with_keypoints = cv2.drawKeypoints(img, keypoints, None)
+            #  #SURF
+            #  gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            #  surf = cv2.xfeatures2d.SURF_create()
+            #  keypoints, descriptors = surf.detectAndCompute(gray, None)
+            #  img_with_keypoints = cv2.drawKeypoints(img, keypoints, None)
+
 
         if format_choice == 'jpeg':
              encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]

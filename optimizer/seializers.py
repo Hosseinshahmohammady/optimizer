@@ -16,6 +16,8 @@ class ImageUploadSerializer(serializers.Serializer):
     contrast = serializers.FloatField(required=False, min_value=-100, max_value=100, default=0)  
     brightness = serializers.FloatField(required=False, min_value=-100, max_value=100, default=0)
     corner_detection = serializers.BooleanField(required=False, default=False)
+    Identify_features = serializers.BooleanField(required=False, default=False)
+
 
     def validate_quality(self, value):
         if value is None:
