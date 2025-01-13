@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'rest_framework_simplejwt',
-
+    'corsheaders',
 
 ]
 
@@ -56,8 +56,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+
     ]
 
+CORS_ALLOWED_ORIGINS = [
+    "http://172.105.38.184",
+]
 
 ROOT_URLCONF = 'image_optimizer.urls'
 
