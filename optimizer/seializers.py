@@ -18,12 +18,12 @@ class ImageUploadSerializer(serializers.Serializer):
     brightness = serializers.FloatField(required=False, min_value=-100, max_value=100, default=0)
     corner_detection = serializers.BooleanField(required=False, default=False)
     Identify_features = serializers.BooleanField(required=False, default=False)
-    translate_x = serializers.IntegerField(required=False, default=0)
-    translate_y = serializers.IntegerField(required=False, default=0)
-    scale_x = serializers.FloatField(required=False, default=1.0)
-    scale_y = serializers.FloatField(required=False, default=1.0)
-    shear_x = serializers.FloatField(required=False, default=0.0)
-    shear_y = serializers.FloatField(required=False, default=0.0)
+    translate_x = serializers.IntegerField(required=False)
+    translate_y = serializers.IntegerField(required=False)
+    scale_x = serializers.FloatField(required=False)
+    scale_y = serializers.FloatField(required=False)
+    shear_x = serializers.FloatField(required=False)
+    shear_y = serializers.FloatField(required=False)
 
 
 
