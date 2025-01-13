@@ -214,8 +214,10 @@ class OptimizeImageView(APIView):
              bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
              matches = bf.match(descriptors1, descriptors2)
              matches = sorted(matches, key = lambda x:x.distance)
-             image_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:10], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-             
+             image_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+             cv2.imshow("Matches", image_matches)
+             cv2.waitKey(0)
+             cv2.destroyAllWindows()
             #  #SURF
             #  gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             #  surf = cv2.xfeatures2d.SURF_create()
