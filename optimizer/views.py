@@ -94,8 +94,8 @@ class OptimizeImageView(APIView):
         if not image: 
             return JsonResponse({'error': 'No image exist'}, status=400)
         image2 = serializer.validated_data.get('image2')
-        if not image2: 
-            return JsonResponse({'error': 'No image exist'}, status=400)
+        # if not image2: 
+        #     return JsonResponse({'error': 'No image exist'}, status=400)
         format_choice = serializer.validated_data.get('format')
         quality = serializer.validated_data.get('quality')
         width = serializer.validated_data.get('width')
