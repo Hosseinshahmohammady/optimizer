@@ -60,9 +60,7 @@ MIDDLEWARE = [
 
     ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://172.105.38.184",
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'image_optimizer.urls'
 
