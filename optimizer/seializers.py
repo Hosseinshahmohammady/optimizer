@@ -15,6 +15,7 @@ class ImageUploadSerializer(serializers.Serializer):
     histogram_equalization = serializers.BooleanField(required=False, default=False)
     contrast = serializers.FloatField(required=False, min_value=-100, max_value=100, default=0)  
     brightness = serializers.FloatField(required=False, min_value=-100, max_value=100, default=0)
+    corner_detection = serializers.BooleanField(required=False, default=False)
 
     def validate_quality(self, value):
         if value is None:

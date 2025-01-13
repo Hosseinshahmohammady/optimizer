@@ -106,6 +106,7 @@ class OptimizeImageView(APIView):
         histogram_equalization = serializer.validated_data.get('histogram_equalization')
         contrast = serializer.validated_data.get('contrast')
         brightness = serializer.validated_data.get('brightness')
+        corner_detection = serializer.validated_data.get('corner_detection')
 
         try:    
             quality = int(quality)
@@ -182,6 +183,13 @@ class OptimizeImageView(APIView):
                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
             else:
                 img = cv2.equalizeHist(img)
+
+        if corner_detection:
+             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+             gray = np.float32(gray)
+             dst = cv2.cornerHarris(gray, 2, 3, 0.04)
+             dst = cv2.dilate(dst, None)
+             img[dst > 0.01 * dst.max()] = [0, 0, 225]
 
         if format_choice == 'jpeg':
              encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
