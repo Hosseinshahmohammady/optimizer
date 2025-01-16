@@ -58,38 +58,6 @@ def login_view(request):
         form = LoginForm()
 
         return render(request, 'login.html', {'form': form})
-
-
-def align_images(img, img2):
-
-    orb = cv2.ORB_create()
-
-    kp1, des1 = orb.detectAndCompute(img, None)
-    kp2, des2 = orb.detectAndCompute(img2, None)
-
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)  
-    matches = bf.match(des1, des2)
-    matches = sorted(matches, key = lambda x:x.distance)
-
-    src_pts = np.float32([kp1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
-    dst_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
-
-    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-
-    h, w = img2.shape[:2]
-    aligned_img = cv2.warpPerspective(img, M, (w, h))
-
-    return aligned_img
-
-def combine_images(img, img2, mode='horizontal'):
-    if mode == 'horizontal':
-        combined_img = np.hstack((img, img2))
-    elif mode == 'vertical':
-        combined_img = np.vstack((img, img2))
-    else:
-        raise ValueError("Invalid mode. Use 'horizontal' or 'vertical'.")
-    return combined_img
-
     
 
 class ObtainJWTTokenView(APIView):
