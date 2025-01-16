@@ -140,8 +140,6 @@ def post(self, request):
         scale_y = serializer.validated_data.get('scale_y')
         shear_x = serializer.validated_data.get('shear_x')
         shear_y = serializer.validated_data.get('shear_y')
-        aligned_image = serializer.validated_data.get('aligned_image')
-
 
         try:    
             quality = int(quality)
@@ -287,18 +285,6 @@ def post(self, request):
             M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
             img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
 
-
-        if aligned_image:
-            if img2 is None:
-                return JsonResponse({'error': 'Second image is required for alignment.'}, status=400)
-        aligned_img = align_images(img, img2)
-        img = aligned_img
-
-        if combine_images:
-            if img2 is None:
-                return JsonResponse({'error': 'Second image is required for combining.'}, status=400)
-        combined_img = combine_images(img, img2, mode='horizontal')  
-        img = combined_img
 
 
         media_path = settings.MEDIA_ROOT
