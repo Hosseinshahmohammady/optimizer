@@ -81,12 +81,44 @@ class ObtainJWTTokenView(APIView):
 class OptimizeImageView(APIView):
      permission_classes = [IsAuthenticated]
      parser_classes=([MultiPartParser])
-     @swagger_auto_schema(
+
+def align_images(img, img2):
+
+    orb = cv2.ORB_create()
+
+    kp1, des1 = orb.detectAndCompute(img, None)
+    kp2, des2 = orb.detectAndCompute(img2, None)
+
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)  
+    matches = bf.match(des1, des2)
+    matches = sorted(matches, key = lambda x:x.distance)
+
+    src_pts = np.float32([kp1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
+    dst_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
+
+    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+
+    h, w = img2.shape[:2]
+    aligned_img = cv2.warpPerspective(img, M, (w, h))
+
+    return aligned_img
+
+def combine_images(img, img2, mode='horizontal'):
+    if mode == 'horizontal':
+        combined_img = np.hstack((img, img2))
+    elif mode == 'vertical':
+        combined_img = np.vstack((img, img2))
+    else:
+        raise ValueError("Invalid mode. Use 'horizontal' or 'vertical'.")
+    return combined_img
+
+
+@swagger_auto_schema(
     request_body=ImageUploadSerializer,
     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'},
     
     )
-     def post(self, request):
+def post(self, request):
         serializer = ImageUploadSerializer(data=request.data) 
         if not serializer.is_valid():
                 return JsonResponse({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
@@ -138,6 +170,7 @@ class OptimizeImageView(APIView):
         scale_y = serializer.validated_data.get('scale_y')
         shear_x = serializer.validated_data.get('shear_x')
         shear_y = serializer.validated_data.get('shear_y')
+        aligned_image = serializer.validated_data.get('aligned_image')
 
 
         try:    
@@ -283,7 +316,19 @@ class OptimizeImageView(APIView):
         if shear_x or shear_y:
             M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
             img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-        
+
+
+        if aligned_image:
+            if img2 is None:
+                return JsonResponse({'error': 'Second image is required for alignment.'}, status=400)
+        aligned_img = align_images(img, img2)
+        img = aligned_img
+
+        if combine_images:
+            if img2 is None:
+                return JsonResponse({'error': 'Second image is required for combining.'}, status=400)
+        combined_img = combine_images(img, img2, mode='horizontal')  
+        img = combined_img
 
         media_path = settings.MEDIA_ROOT
         if not os.path.exists(media_path):

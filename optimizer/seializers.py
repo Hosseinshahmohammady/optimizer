@@ -24,7 +24,8 @@ class ImageUploadSerializer(serializers.Serializer):
     scale_y = serializers.FloatField(required=False, default=1.0)
     shear_x = serializers.FloatField(required=False, default=0)
     shear_y = serializers.FloatField(required=False, default=0)
-
+    aligned_image = serializers.BooleanField(required=True, default=False)
+    combine_images = serializers.BooleanField(required=False, default=False)
 
 
     def validate_quality(self, value):
