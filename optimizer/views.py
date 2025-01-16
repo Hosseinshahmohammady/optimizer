@@ -58,29 +58,7 @@ def login_view(request):
         form = LoginForm()
 
         return render(request, 'login.html', {'form': form})
-     
 
-class ObtainJWTTokenView(APIView):
-    permission_classes = [AllowAny]
-    def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
-
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
-            return JsonResponse({
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-            }, status=status.HTTP_200_OK)
-        
-        return JsonResponse({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-    
-
-class OptimizeImageView(APIView):
-     permission_classes = [IsAuthenticated]
-     parser_classes=([MultiPartParser])
 
 def align_images(img, img2):
 
@@ -112,7 +90,29 @@ def combine_images(img, img2, mode='horizontal'):
         raise ValueError("Invalid mode. Use 'horizontal' or 'vertical'.")
     return combined_img
 
+    
 
+class ObtainJWTTokenView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            return JsonResponse({
+                'access_token': str(refresh.access_token),
+                'refresh_token': str(refresh),
+            }, status=status.HTTP_200_OK)
+        
+        return JsonResponse({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+
+class OptimizeImageView(APIView):
+     permission_classes = [IsAuthenticated]
+     parser_classes=([MultiPartParser])
 @swagger_auto_schema(
     request_body=ImageUploadSerializer,
     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'},
@@ -122,11 +122,13 @@ def post(self, request):
         serializer = ImageUploadSerializer(data=request.data) 
         if not serializer.is_valid():
                 return JsonResponse({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+
      
         image = serializer.validated_data.get('image')
         image2 = serializer.validated_data.get('image2')
         if not image and not image2:
-            return JsonResponse({'error': 'At least one image must be provided'}, status=status.HTTP_400_BAD_REQUEST)
+         return JsonResponse({'error': 'At least one image must be provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
         try:
             if image:
                 file_data = image.read()
@@ -329,6 +331,7 @@ def post(self, request):
                 return JsonResponse({'error': 'Second image is required for combining.'}, status=400)
         combined_img = combine_images(img, img2, mode='horizontal')  
         img = combined_img
+
 
         media_path = settings.MEDIA_ROOT
         if not os.path.exists(media_path):
