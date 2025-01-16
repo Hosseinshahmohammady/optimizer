@@ -86,10 +86,6 @@ class OptimizeImageView(APIView):
     responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'},
     
     )
-def post(self, request):
-        serializer = ImageUploadSerializer(data=request.data) 
-        if not serializer.is_valid():
-                return JsonResponse({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
 
      
         image = serializer.validated_data.get('image')
