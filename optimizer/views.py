@@ -139,6 +139,7 @@ class OptimizeImageView(APIView):
         scale_y = serializer.validated_data.get('scale_y')
         shear_x = serializer.validated_data.get('shear_x')
         shear_y = serializer.validated_data.get('shear_y')
+        aligned_image = serializer.validated_data.get('aligned_image')
 
         try:    
             quality = int(quality)
@@ -283,6 +284,24 @@ class OptimizeImageView(APIView):
         if shear_x or shear_y:
             M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
             img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+
+        
+        if aligned_image:
+            sift = cv2.SIFT_create()
+            kp1, des1 = sift.detectAndCompute(img, None)
+            kp2, des2 = sift.detectAndCompute(img2, None)
+
+            bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+            matches = bf.match(des1, des2)
+            matches = sorted(matches, key=lambda x:x.distance)
+
+            src_pts = np.float32([ kp1[m.queryIdx].pt for m in matches ]).reshape(-1,1,2)
+            dst_pts = np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
+
+            M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+
+            h, w = img.shape
+            img_aligned = cv2.warpPerspective(img, M, (w, h))
 
 
 
