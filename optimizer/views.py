@@ -249,7 +249,17 @@ class OptimizeImageView(APIView):
 
         else:
 
+        
+         if translate_x or translate_y:
+            M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
+            img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
 
+         if scale_x != 1.0 or scale_y != 1.0:
+            img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
+
+         if shear_x or shear_y:
+            M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
+            img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
         
         
          if format_choice == 'jpeg':
@@ -273,17 +283,6 @@ class OptimizeImageView(APIView):
         
         if not result:
              raise ValueError("The image could not be encoded.")
-        
-        if translate_x or translate_y:
-            M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
-            img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-
-        if scale_x != 1.0 or scale_y != 1.0:
-            img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
-
-        if shear_x or shear_y:
-            M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
-            img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
 
         
         if aligned_image:
