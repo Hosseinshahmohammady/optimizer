@@ -300,8 +300,13 @@ class OptimizeImageView(APIView):
 
             M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
 
-            h, w = img.shape
-            img_aligned = cv2.warpPerspective(img, M, (w, h))
+            if len(img.shape) == 2:
+                h, w = img.shape
+            else:
+
+             h, w, c = img.shape
+
+             img_aligned = cv2.warpPerspective(img, M, (w, h, c))
 
             if not os.path.exists(media_path):
               os.makedirs(media_path)
@@ -321,9 +326,7 @@ class OptimizeImageView(APIView):
              'image_id': pk  
              })
 
-
         else:
-
 
 
             media_path = settings.MEDIA_ROOT
