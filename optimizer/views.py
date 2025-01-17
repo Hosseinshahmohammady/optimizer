@@ -303,6 +303,26 @@ class OptimizeImageView(APIView):
             h, w = img.shape
             img_aligned = cv2.warpPerspective(img, M, (w, h))
 
+            media_path = settings.MEDIA_ROOT
+
+            if not os.path.exists(media_path):
+              os.makedirs(media_path)
+
+            existing_files = os.listdir(media_path)
+            pk = len(existing_files) + 1
+            file_name = f'features_{pk}.jpg'
+            file_path = os.path.join(media_path, file_name)
+
+            cv2.imwrite(file_path, image_matches)
+
+            image_url = os.path.join(settings.MEDIA_URL, file_name)
+
+            return JsonResponse({
+             'message': 'Features identified and matches found',
+             'image_url': image_url,
+             'image_id': pk  
+             })
+
 
 
         media_path = settings.MEDIA_ROOT
