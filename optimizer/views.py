@@ -306,7 +306,7 @@ class OptimizeImageView(APIView):
 
              h, w, c = img.shape
 
-             img_aligned = cv2.warpPerspective(img, M, (w, h, c))
+             img_aligned = cv2.warpPerspective(img, M, (w, h))
 
             if not os.path.exists(media_path):
               os.makedirs(media_path)
