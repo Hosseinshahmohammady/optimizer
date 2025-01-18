@@ -141,7 +141,7 @@ class OptimizeImageView(APIView):
         shear_y = serializer.validated_data.get('shear_y')
         aligned_image = serializer.validated_data.get('aligned_image')
         combine_images = serializer.validated_data.get('combine_images')
-        panorama =serializer.validated_data.get('panorama')
+        panorama_image =serializer.validated_data.get('panorama')
 
         try:    
             quality = int(quality)
@@ -334,12 +334,12 @@ class OptimizeImageView(APIView):
 
             else:
              
-             if panorama:
+             if panorama_image:
               stitcher = cv2.Stitcher_create()
-              status, panoramaa = stitcher.stitch([img, img2])
+              status, panorama = stitcher.stitch([img, img2])
 
-             if status == cv2.Stitcher_OK:
-              cv2.imshow('Panoramaa', result)
+            if status == cv2.Stitcher_OK:
+              cv2.imshow('panorama', panorama)
               cv2.waitKey(0)
 
             media_path = settings.MEDIA_ROOT
@@ -349,10 +349,10 @@ class OptimizeImageView(APIView):
 
              existing_files = os.listdir(media_path)
              pk = len(existing_files) + 1
-             file_name = f'panoramaa_{pk}.jpg'
+             file_name = f'panorama_{pk}.jpg'
              file_path = os.path.join(media_path, file_name)
 
-             cv2.imwrite(file_path, panoramaa)
+             cv2.imwrite(file_path, panorama)
 
              image_url = os.path.join(settings.MEDIA_URL, file_name)
 
