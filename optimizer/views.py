@@ -339,17 +339,17 @@ class OptimizeImageView(APIView):
               status, panoramaa = stitcher.stitch([img, img2])
 
              if status == cv2.Stitcher_OK:
-              cv2.imshow('Panorama', result)
+              cv2.imshow('Panoramaa', result)
               cv2.waitKey(0)
 
             media_path = settings.MEDIA_ROOT
-            
+
             if not os.path.exists(media_path):
              os.makedirs(media_path)
 
              existing_files = os.listdir(media_path)
              pk = len(existing_files) + 1
-             file_name = f'panorama_{pk}.jpg'
+             file_name = f'panoramaa_{pk}.jpg'
              file_path = os.path.join(media_path, file_name)
 
              cv2.imwrite(file_path, panoramaa)
