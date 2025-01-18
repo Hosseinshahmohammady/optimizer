@@ -275,7 +275,6 @@ class OptimizeImageView(APIView):
             dst_pts = np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
 
             M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-            media_path = settings.MEDIA_ROOT
             if len(img.shape) == 2:
                 h, w = img.shape
             else:
@@ -284,15 +283,18 @@ class OptimizeImageView(APIView):
 
              img_aligned = cv2.warpPerspective(img, M, (w, h))
 
+            media_path = settings.MEDIA_ROOT
             if not os.path.exists(media_path):
+
               os.makedirs(media_path)
 
             existing_files = os.listdir(media_path)
+
             pk = len(existing_files) + 1
             file_name = f'features_{pk}.jpg'
             file_path = os.path.join(media_path, file_name)
 
-            cv2.imwrite(file_path, image_matches)
+            cv2.imwrite(file_path, img_aligned)
 
             image_url = os.path.join(settings.MEDIA_URL, file_name)
 
@@ -330,6 +332,7 @@ class OptimizeImageView(APIView):
 
 
         media_path = settings.MEDIA_ROOT
+
         if not os.path.exists(media_path):
             os.makedirs(media_path)
 
