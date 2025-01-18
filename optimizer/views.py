@@ -271,10 +271,19 @@ class OptimizeImageView(APIView):
             matches = bf.match(des1, des2)
             matches = sorted(matches, key=lambda x:x.distance)
 
+            print(f"Number of matches: {len(matches)}")
+            if len(matches) < 4:
+                return JsonResponse({'error': 'Not enough matches found for homography'}, status=400)
+
+
             src_pts = np.float32([ kp1[m.queryIdx].pt for m in matches ]).reshape(-1,1,2)
             dst_pts = np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
 
             M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+
+            if M is None:
+                return JsonResponse({'error': 'Homography calculation failed'}, status=400)
+
             if len(img.shape) == 2:
                 h, w = img.shape
             else:
@@ -283,19 +292,19 @@ class OptimizeImageView(APIView):
 
              img_aligned = cv2.warpPerspective(img, M, (w, h))
 
+            print(f"Shape of aligned image: {img_aligned.shape}")
+
+
             media_path = settings.MEDIA_ROOT
             if not os.path.exists(media_path):
-
               os.makedirs(media_path)
 
             existing_files = os.listdir(media_path)
-
             pk = len(existing_files) + 1
             file_name = f'features_{pk}.jpg'
             file_path = os.path.join(media_path, file_name)
 
             cv2.imwrite(file_path, img_aligned)
-
             image_url = os.path.join(settings.MEDIA_URL, file_name)
 
             return JsonResponse({
