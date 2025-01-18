@@ -338,6 +338,11 @@ class OptimizeImageView(APIView):
               stitcher = cv2.Stitcher_create()
               status, panorama = stitcher.stitch([img, img2])
 
+              if status is None:
+                return JsonResponse({
+                'error': 'Panorama stitching failed, status is None!'
+                }, status=400)
+
             if status == cv2.Stitcher_OK:
               cv2.imshow('panorama', panorama)
               cv2.waitKey(0)
