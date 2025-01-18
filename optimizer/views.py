@@ -341,6 +341,7 @@ class OptimizeImageView(APIView):
             if status == cv2.Stitcher_OK:
               cv2.imshow('panorama', panorama)
               cv2.waitKey(0)
+              cv2.destroyAllWindows()
 
             media_path = settings.MEDIA_ROOT
 
@@ -362,24 +363,27 @@ class OptimizeImageView(APIView):
              'image_id': pk
                 })
             else:
+                 return JsonResponse({
+                    'error': 'Panorama stitching failed!'
+                        }, status=400)
         
-             if format_choice == 'jpeg':
+        if format_choice == 'jpeg':
               encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
               result, img_encoded = cv2.imencode('.jpg', img, encode_param)
 
-             elif format_choice == 'png':
+        elif format_choice == 'png':
               result, img_encoded = cv2.imencode('.png', img)
 
-             elif format_choice == 'bmb':
+        elif format_choice == 'bmb':
               result, img_encoded = cv2.imencode('.bmb', img)
 
-             elif format_choice == 'webp':
+        elif format_choice == 'webp':
               result, img_encoded = cv2.imencode('.webp', img)
 
-             elif format_choice == 'tiff':
+        elif format_choice == 'tiff':
               result, img_encoded = cv2.imencode('.tiff', img)
 
-             else:
+        else:
               raise ValueError("Unsupported format")
         
         if not result:
