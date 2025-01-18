@@ -342,7 +342,8 @@ class OptimizeImageView(APIView):
               cv2.imshow('Panorama', result)
               cv2.waitKey(0)
 
-              media_path = settings.MEDIA_ROOT
+            media_path = settings.MEDIA_ROOT
+            
             if not os.path.exists(media_path):
              os.makedirs(media_path)
 
