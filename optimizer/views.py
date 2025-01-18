@@ -261,30 +261,7 @@ class OptimizeImageView(APIView):
             M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
             img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
         
-        
-         if format_choice == 'jpeg':
-             encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-             result, img_encoded = cv2.imencode('.jpg', img, encode_param)
 
-         elif format_choice == 'png':
-             result, img_encoded = cv2.imencode('.png', img)
-
-         elif format_choice == 'bmb':
-             result, img_encoded = cv2.imencode('.bmb', img)
-
-         elif format_choice == 'webp':
-             result, img_encoded = cv2.imencode('.webp', img)
-
-         elif format_choice == 'tiff':
-             result, img_encoded = cv2.imencode('.tiff', img)
-
-         else:
-             raise ValueError("Unsupported format")
-        
-        if not result:
-             raise ValueError("The image could not be encoded.")
-
-        
         if aligned_image:
             sift = cv2.SIFT_create()
             kp1, des1 = sift.detectAndCompute(img, None)
@@ -327,8 +304,32 @@ class OptimizeImageView(APIView):
 
         else:
 
+        
+         if format_choice == 'jpeg':
+             encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+             result, img_encoded = cv2.imencode('.jpg', img, encode_param)
 
-            media_path = settings.MEDIA_ROOT
+         elif format_choice == 'png':
+             result, img_encoded = cv2.imencode('.png', img)
+
+         elif format_choice == 'bmb':
+             result, img_encoded = cv2.imencode('.bmb', img)
+
+         elif format_choice == 'webp':
+             result, img_encoded = cv2.imencode('.webp', img)
+
+         elif format_choice == 'tiff':
+             result, img_encoded = cv2.imencode('.tiff', img)
+
+         else:
+             raise ValueError("Unsupported format")
+        
+        if not result:
+             raise ValueError("The image could not be encoded.")
+
+
+
+        media_path = settings.MEDIA_ROOT
         if not os.path.exists(media_path):
             os.makedirs(media_path)
 
