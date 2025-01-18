@@ -341,8 +341,6 @@ class OptimizeImageView(APIView):
              if status == cv2.Stitcher_OK:
               cv2.imshow('Panorama', result)
               cv2.waitKey(0)
-             else:
-              print('Error in stitching images')
 
               media_path = settings.MEDIA_ROOT
             if not os.path.exists(media_path):
