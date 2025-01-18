@@ -275,7 +275,7 @@ class OptimizeImageView(APIView):
             dst_pts = np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
 
             M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-
+            media_path = settings.MEDIA_ROOT
             if len(img.shape) == 2:
                 h, w = img.shape
             else:
