@@ -140,6 +140,8 @@ class OptimizeImageView(APIView):
         shear_x = serializer.validated_data.get('shear_x')
         shear_y = serializer.validated_data.get('shear_y')
         aligned_image = serializer.validated_data.get('aligned_image')
+        combine_images = serializer.validated_data.get('combine_images')
+        panorama =serializer.validated_data.get('panorama')
 
         try:    
             quality = int(quality)
@@ -296,32 +298,90 @@ class OptimizeImageView(APIView):
             image_url = os.path.join(settings.MEDIA_URL, file_name)
 
             return JsonResponse({
-             'message': 'Features identified and matches found',
+             'message': 'Features2 identified and matches found',
              'image_url': image_url,
              'image_id': pk  
              })
 
          else:
 
-        
-            if format_choice == 'jpeg':
-             encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-             result, img_encoded = cv2.imencode('.jpg', img, encode_param)
+            if combine_images:
+                mask = np.zeros_like(img, dtype=np.uint8)
+                cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
 
-            elif format_choice == 'png':
-             result, img_encoded = cv2.imencode('.png', img)
+                img_masked = cv2.bitwise_and(img, mask)
+                img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
 
-            elif format_choice == 'bmb':
-             result, img_encoded = cv2.imencode('.bmb', img)
+                combined = cv2.add(img_masked, img2_masked)
 
-            elif format_choice == 'webp':
-             result, img_encoded = cv2.imencode('.webp', img)
+                media_path = settings.MEDIA_ROOT
+                if not os.path.exists(media_path):
+                 os.makedirs(media_path)
 
-            elif format_choice == 'tiff':
-             result, img_encoded = cv2.imencode('.tiff', img)
+                existing_files = os.listdir(media_path)
+                pk = len(existing_files) + 1
+                file_name = f'features3_{pk}.jpg'
+                file_path = os.path.join(media_path, file_name)
+
+                cv2.imwrite(file_path, combined)
+                image_url = os.path.join(settings.MEDIA_URL, file_name)
+
+                return JsonResponse({
+                'message': 'Features3 identified and matches found',
+                'image_url': image_url,
+                'image_id': pk  
+                })
 
             else:
-             raise ValueError("Unsupported format")
+             
+             if panorama:
+              stitcher = cv2.createStitcher()
+              status, panoramaa = stitcher.stitch([img, img2])
+
+             if status == cv2.Stitcher_OK:
+              cv2.imshow('Panorama', result)
+              cv2.waitKey(0)
+             else:
+              print('Error in stitching images')
+
+              media_path = settings.MEDIA_ROOT
+            if not os.path.exists(media_path):
+             os.makedirs(media_path)
+
+             existing_files = os.listdir(media_path)
+             pk = len(existing_files) + 1
+             file_name = f'panorama_{pk}.jpg'
+             file_path = os.path.join(media_path, file_name)
+
+             cv2.imwrite(file_path, panoramaa)
+
+             image_url = os.path.join(settings.MEDIA_URL, file_name)
+
+             return JsonResponse({
+             'message': 'Panorama created successfully!',
+             'image_url': image_url,
+             'image_id': pk
+                })
+            else:
+        
+             if format_choice == 'jpeg':
+              encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+              result, img_encoded = cv2.imencode('.jpg', img, encode_param)
+
+             elif format_choice == 'png':
+              result, img_encoded = cv2.imencode('.png', img)
+
+             elif format_choice == 'bmb':
+              result, img_encoded = cv2.imencode('.bmb', img)
+
+             elif format_choice == 'webp':
+              result, img_encoded = cv2.imencode('.webp', img)
+
+             elif format_choice == 'tiff':
+              result, img_encoded = cv2.imencode('.tiff', img)
+
+             else:
+              raise ValueError("Unsupported format")
         
         if not result:
              raise ValueError("The image could not be encoded.")
