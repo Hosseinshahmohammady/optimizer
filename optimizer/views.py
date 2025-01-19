@@ -13,7 +13,6 @@ from drf_yasg.utils import swagger_auto_schema
 from .seializers import ImageUploadSerializer
 import os
 import cv2
-import base64
 import numpy as np
 from .forms import SignUpForm, LoginForm
 from django.shortcuts import render, redirect
@@ -310,33 +309,38 @@ class OptimizeImageView(APIView):
               status, panorama = stitcher.stitch([img, img2])
 
             if status == cv2.Stitcher_OK:
-                 cv2.imshow('panorama', panorama)
-                 cv2.waitKey(0)
-                 cv2.destroyAllWindows()
+                #  cv2.imshow('panorama', panorama)
+                #  cv2.waitKey(0)
+                #  cv2.destroyAllWindows()
 
-            media_path = settings.MEDIA_ROOT
+                media_path = settings.MEDIA_ROOT
 
-            if not os.path.exists(media_path):
-             os.makedirs(media_path)
+                if not os.path.exists(media_path):
+                 os.makedirs(media_path)
 
-             existing_files = os.listdir(media_path)
-             pk = len(existing_files) + 1
-             file_name = f'panorama_{pk}.jpg'
-             file_path = os.path.join(media_path, file_name)
+                existing_files = os.listdir(media_path)
+                pk = len(existing_files) + 1
+                file_name = f'panorama_{pk}.jpg'
+                file_path = os.path.join(media_path, file_name)
 
-             cv2.imwrite(file_path, panorama)
+                cv2.imwrite(file_path, panorama)
 
-             image_url = os.path.join(settings.MEDIA_URL, file_name)
+                image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-             return JsonResponse({
-             'message': 'Panorama created successfully!',
-             'image_url': image_url,
-             'image_id': pk
-                })
+                return JsonResponse({
+                'message': 'Panorama created successfully!',
+                'image_url': image_url,
+                'image_id': pk
+                    })
             else:
-                 return JsonResponse({
-                    'error': 'Panorama stitching failed!'
-                        }, status=400)
+                return JsonResponse({'error': 
+                f'Panorama stitching failed! Status code: {status}'
+                }, status=400)
+            
+# else:
+#             return JsonResponse({
+#                 'error': 'Panorama image flag not provided'
+#                                     }, status=400)
 
         if combine_images:
                 mask = np.zeros_like(img, dtype=np.uint8)
