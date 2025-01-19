@@ -329,7 +329,7 @@ class OptimizeImageView(APIView):
         }
 
         try:
-            pk, image_url = process_and_save_image(img, processing_params, format_choice=processing_params['format'], quality=processing_params['quality'])
+            pk, image_url = process_and_save_image(img, processing_params)
         except ValueError as e:
             return JsonResponse({'error': str(e)}, status=400)
 
