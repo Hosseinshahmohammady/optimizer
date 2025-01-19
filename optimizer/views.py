@@ -334,56 +334,24 @@ class OptimizeImageView(APIView):
 
             else:
              
-             if panorama_image:
-              stitcher = cv2.Stitcher_create()
-              status, panorama = stitcher.stitch([img, img2])
-
-             if status == cv2.Stitcher_OK:
-                 cv2.imshow('panorama', panorama)
-                 cv2.waitKey(0)
-                 cv2.destroyAllWindows()
-
-            media_path = settings.MEDIA_ROOT
-
-            if not os.path.exists(media_path):
-             os.makedirs(media_path)
-
-             existing_files = os.listdir(media_path)
-             pk = len(existing_files) + 1
-             file_name = f'panorama_{pk}.jpg'
-             file_path = os.path.join(media_path, file_name)
-
-             cv2.imwrite(file_path, panorama)
-
-             image_url = os.path.join(settings.MEDIA_URL, file_name)
-
-             return JsonResponse({
-             'message': 'Panorama created successfully!',
-             'image_url': image_url,
-             'image_id': pk
-                })
-            else:
-                 return JsonResponse({
-                    'error': 'Panorama stitching failed!'
-                        }, status=400)
         
-        if format_choice == 'jpeg':
+             if format_choice == 'jpeg':
               encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
               result, img_encoded = cv2.imencode('.jpg', img, encode_param)
 
-        elif format_choice == 'png':
+             elif format_choice == 'png':
               result, img_encoded = cv2.imencode('.png', img)
 
-        elif format_choice == 'bmb':
+             elif format_choice == 'bmb':
               result, img_encoded = cv2.imencode('.bmb', img)
 
-        elif format_choice == 'webp':
+             elif format_choice == 'webp':
               result, img_encoded = cv2.imencode('.webp', img)
 
-        elif format_choice == 'tiff':
+             elif format_choice == 'tiff':
               result, img_encoded = cv2.imencode('.tiff', img)
 
-        else:
+             else:
               raise ValueError("Unsupported format")
         
         if not result:
