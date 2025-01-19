@@ -355,8 +355,8 @@ class OptimizeImageView(APIView):
                 result[0:image.shape[0], 0:image.shape[1]] = image
 
                 media_path = settings.MEDIA_ROOT
-              if not os.path.exists(media_path):
-                os.makedirs(media_path)
+                if not os.path.exists(media_path):
+                    os.makedirs(media_path)
 
                 existing_files = os.listdir(media_path)
                 pk = len(existing_files) + 1
