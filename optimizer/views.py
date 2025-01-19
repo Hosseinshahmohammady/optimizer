@@ -304,45 +304,7 @@ class OptimizeImageView(APIView):
 
          else:
 
-            if panorama_image:
-              stitcher = cv2.Stitcher_create()
-              status, panorama = stitcher.stitch([img, img2])
-
-            if status == cv2.Stitcher_OK:
-                #  cv2.imshow('panorama', panorama)
-                #  cv2.waitKey(0)
-                #  cv2.destroyAllWindows()
-
-                media_path = settings.MEDIA_ROOT
-
-                if not os.path.exists(media_path):
-                 os.makedirs(media_path)
-
-                existing_files = os.listdir(media_path)
-                pk = len(existing_files) + 1
-                file_name = f'panorama_{pk}.jpg'
-                file_path = os.path.join(media_path, file_name)
-
-                cv2.imwrite(file_path, panorama)
-
-                image_url = os.path.join(settings.MEDIA_URL, file_name)
-
-                return JsonResponse({
-                'message': 'Panorama created successfully!',
-                'image_url': image_url,
-                'image_id': pk
-                    })
-            else:
-                return JsonResponse({'error': 
-                f'Panorama stitching failed! Status code: {status}'
-                }, status=400)
-            
-# else:
-#             return JsonResponse({
-#                 'error': 'Panorama image flag not provided'
-#                                     }, status=400)
-
-        if combine_images:
+           if combine_images:
                 mask = np.zeros_like(img, dtype=np.uint8)
                 cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
 
@@ -369,27 +331,68 @@ class OptimizeImageView(APIView):
                 'image_id': pk  
                 })
 
-        else:
+           else:
              
+              if panorama_image:
+                gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+
+                orb = cv2.ORB_create()
+                kp1, des1 = orb.detectAndCompute(gray1, None)
+                kp2, des2 = orb.detectAndCompute(gray2, None)
+
+                bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+                matches = bf.match(des1, des2)
+
+                matches = sorted(matches, key = lambda x:x.distance)
+
+                points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
+                points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
+
+                h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+
+                result = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
+                result[0:image.shape[0], 0:image.shape[1]] = image
+
+                media_path = settings.MEDIA_ROOT
+
+                if not os.path.exists(media_path):
+                 os.makedirs(media_path)
+
+                existing_files = os.listdir(media_path)
+                pk = len(existing_files) + 1
+                file_name = f'panorama_{pk}.jpg'
+                file_path = os.path.join(media_path, file_name)
+
+                cv2.imwrite(file_path, result)
+
+                image_url = os.path.join(settings.MEDIA_URL, file_name)
+
+                return JsonResponse({
+                'message': 'Panorama created successfully!',
+                'image_url': image_url,
+                'image_id': pk
+                    })
+              else :
         
-             if format_choice == 'jpeg':
-              encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-              result, img_encoded = cv2.imencode('.jpg', img, encode_param)
+                if format_choice == 'jpeg':
+                 encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+                 result, img_encoded = cv2.imencode('.jpg', img, encode_param)
 
-             elif format_choice == 'png':
-              result, img_encoded = cv2.imencode('.png', img)
+                elif format_choice == 'png':
+                 result, img_encoded = cv2.imencode('.png', img)
 
-             elif format_choice == 'bmb':
-              result, img_encoded = cv2.imencode('.bmb', img)
+                elif format_choice == 'bmb':
+                 result, img_encoded = cv2.imencode('.bmb', img)
 
-             elif format_choice == 'webp':
-              result, img_encoded = cv2.imencode('.webp', img)
+                elif format_choice == 'webp':
+                 result, img_encoded = cv2.imencode('.webp', img)
 
-             elif format_choice == 'tiff':
-              result, img_encoded = cv2.imencode('.tiff', img)
+                elif format_choice == 'tiff':
+                 result, img_encoded = cv2.imencode('.tiff', img)
 
-             else:
-              raise ValueError("Unsupported format")
+                else:
+                  raise ValueError("Unsupported format")
         
         if not result:
              raise ValueError("The image could not be encoded.")
