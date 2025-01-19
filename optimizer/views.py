@@ -59,7 +59,7 @@ def login_view(request):
         return render(request, 'login.html', {'form': form})
 
 
-def process_and_save_image(image, image2, processing_params, format_choice='jpeg', quality=90):
+def process_and_save_image(image, image2, processing_params, format_choice, quality):
 
     if image is None:
         return None
