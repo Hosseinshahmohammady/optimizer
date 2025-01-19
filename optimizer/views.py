@@ -336,6 +336,7 @@ class OptimizeImageView(APIView):
              
              if panorama_image:
               stitcher = cv2.Stitcher_create()
+              status = None
               status, panorama = stitcher.stitch([img, img2])
 
               if status is None:
