@@ -355,13 +355,12 @@ class OptimizeImageView(APIView):
                 result[0:image.shape[0], 0:image.shape[1]] = image
 
                 media_path = settings.MEDIA_ROOT
-
                 if not os.path.exists(media_path):
                  os.makedirs(media_path)
 
                 existing_files = os.listdir(media_path)
                 pk = len(existing_files) + 1
-                file_name = f'panorama_{pk}.jpg'
+                file_name = f'features3_{pk}.jpg'
                 file_path = os.path.join(media_path, file_name)
 
                 cv2.imwrite(file_path, result)
@@ -369,10 +368,10 @@ class OptimizeImageView(APIView):
                 image_url = os.path.join(settings.MEDIA_URL, file_name)
 
                 return JsonResponse({
-                'message': 'Panorama created successfully!',
-                'image_url': image_url,
-                'image_id': pk
-                    })
+             'message': 'Features3 identified and matches found',
+             'image_url': image_url,
+             'image_id': pk  
+             })
               else :
         
                 if format_choice == 'jpeg':
