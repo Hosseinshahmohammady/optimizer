@@ -301,7 +301,7 @@ class OptimizeImageView(APIView):
             return JsonResponse({'error': str(e)}, status=400)
 
         processing_params = {            
-        'format_choice':serializer.validated_data.get('quality'),
+        'format_choice':serializer.validated_data.get('format_choice'),
         'quality': serializer.validated_data.get('quality'),
         'width':  serializer.validated_data.get('width'),
         'height':  serializer.validated_data.get('height'),
