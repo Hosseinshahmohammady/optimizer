@@ -59,401 +59,6 @@ def login_view(request):
         return render(request, 'login.html', {'form': form})
 
 
-# def process_and_save_image(image, image2, processing_params, format_choice, quality):
-
-#     if image is None:
-#         return None
-
-#     img = image  
-#     img2 = image2
-
-#     if processing_params.get('grayscale'):
-#         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-#     if processing_params.get('denoise'):
-#         img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
-
-#     if processing_params.get('edge_detection'):
-#         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#         edges = cv2.Canny(img, 100, 200)
-#         img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-
-#     if processing_params.get('cropping'):
-#         try:
-#             x_start, y_start, x_end, y_end = map(int, processing_params['cropping'].split(','))
-#             img = img[y_start:y_end, x_start:x_end]
-#         except Exception as e:
-#             return JsonResponse({'error': "Invalid cropping data"}, status=400)
-
-#     if processing_params.get('rotation_angle'):
-#         try:
-#             rotation_angle = float(processing_params['rotation_angle'])
-#             rows, cols = img.shape[:2]
-#             center = (cols / 2, rows / 2)
-#             rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
-#             img = cv2.warpAffine(img, rotation_matrix, (cols, rows))
-#         except ValueError:
-#             return JsonResponse({"error": "Invalid rotation angle"}, status=400)
-
-#     if processing_params.get('width') and processing_params.get('height'):
-#         width = int(processing_params['width'])
-#         height = int(processing_params['height'])
-#         img = cv2.resize(img, (width, height))
-
-#     if processing_params.get('gaussian_blur'):
-#         try:
-#             kernel_size = int(processing_params['gaussian_blur'])
-#             if kernel_size % 2 == 0:
-#                 kernel_size += 1
-#             img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
-#         except ValueError:
-#             return JsonResponse({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
-
-#     if processing_params.get('contrast') or processing_params.get('brightness'):
-#         contrast = float(processing_params.get('contrast', 1.0))
-#         brightness = int(processing_params.get('brightness', 0))
-#         img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
-
-#     if processing_params.get('histogram_equalization'):
-#         if len(img.shape) == 3:
-#             img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#             img = cv2.equalizeHist(img_gray)
-#             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-#         else:
-#             img = cv2.equalizeHist(img)
-
-#     if processing_params.get('corner_detection'):
-#         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#         gray = np.float32(gray)
-#         dst = cv2.cornerHarris(gray, 2, 3, 0.04)
-#         dst = cv2.dilate(dst, None)
-#         img[dst > 0.01 * dst.max()] = [0, 0, 225]
-
-#     if processing_params.get('Identify_features') and image2 is not None:
-#         gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#         gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
-#         sift = cv2.SIFT_create()
-#         keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
-#         keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
-#         bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
-#         matches = bf.match(descriptors1, descriptors2)
-#         matches = sorted(matches, key=lambda x: x.distance)
-#         img_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-
-#     if processing_params.get('translate_x') or processing_params.get('translate_y'):
-#         M = np.float32([[1, 0, processing_params.get('translate_x', 0)], [0, 1, processing_params.get('translate_y', 0)]])
-#         img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-
-#     if processing_params.get('scale_x') != 1.0 or processing_params.get('scale_y') != 1.0:
-#         img = cv2.resize(img, None, fx=processing_params.get('scale_x', 1.0), fy=processing_params.get('scale_y', 1.0), interpolation=cv2.INTER_LINEAR)
-
-#     if processing_params.get('shear_x') or processing_params.get('shear_y'):
-#         M = np.float32([[1, processing_params.get('shear_x', 0), 0], [processing_params.get('shear_y', 0), 1, 0]])
-#         img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-
-#     if processing_params.get('aligned_image') and image2 is not None:
-#         sift = cv2.SIFT_create()
-#         kp1, des1 = sift.detectAndCompute(img, None)
-#         kp2, des2 = sift.detectAndCompute(image2, None)
-
-#         bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
-#         matches = bf.match(des1, des2)
-#         matches = sorted(matches, key=lambda x: x.distance)
-
-#         src_pts = np.float32([kp1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
-#         dst_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
-
-#         M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-
-#         if len(img.shape) == 2:
-#             h, w = img.shape
-#         else:
-#             h, w, c = img.shape
-
-#         img_aligned = cv2.warpPerspective(img, M, (w, h))
-
-#     if processing_params.get('combine_images') and image2 is not None:
-#         mask = np.zeros_like(img, dtype=np.uint8)
-#         cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
-
-#         img_masked = cv2.bitwise_and(img, mask)
-#         img2_masked = cv2.bitwise_and(image2, cv2.bitwise_not(mask))
-
-#         combined = cv2.add(img_masked, img2_masked)
-
-#     if processing_params.get('panorama_image') and image2 is not None:
-#         gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#         gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
-
-#         orb = cv2.ORB_create()
-#         kp1, des1 = orb.detectAndCompute(gray1, None)
-#         kp2, des2 = orb.detectAndCompute(gray2, None)
-
-#         bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-#         matches = bf.match(des1, des2)
-
-#         matches = sorted(matches, key=lambda x: x.distance)
-
-#         points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
-#         points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
-
-#         h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
-
-#         result = cv2.warpPerspective(image2, h, (img.shape[1] + image2.shape[1], img.shape[0]))
-#         result[0:img.shape[0], 0:img.shape[1]] = img
-
-#     if format_choice == 'jpeg':
-#         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-#         result, img_encoded = cv2.imencode('.jpg', img, encode_param)
-
-#     elif format_choice == 'png':
-#         result, img_encoded = cv2.imencode('.png', img)
-
-#     elif format_choice == 'bmp':
-#         result, img_encoded = cv2.imencode('.bmp', img)
-
-#     elif format_choice == 'webp':
-#         result, img_encoded = cv2.imencode('.webp', img)
-
-#     elif format_choice == 'tiff':
-#         result, img_encoded = cv2.imencode('.tiff', img)
-
-#     else:
-#         raise ValueError("Unsupported format")
-
-#     if not result:
-#         raise ValueError("The image could not be encoded.")
-
-#     media_path = settings.MEDIA_ROOT
-#     if not os.path.exists(media_path):
-#         os.makedirs(media_path)
-
-#     pk = len(os.listdir(media_path)) + 1
-#     file_name = f'{pk}.{format_choice}'
-#     file_path = os.path.join(media_path, file_name)
-
-#     with open(file_path, 'wb') as f:
-#         f.write(img_encoded.tobytes())
-
-#     image_url = os.path.join(settings.MEDIA_URL, file_name)
-
-#     return pk, image_url
-
-
-def process_and_save_image(image, image2, processing_params, format_choice, quality):
-
-    if image is None:
-        return None
-
-    img = image  
-    img2 = image2
-
-    if 'grayscale' in processing_params:
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    if 'denoise' in processing_params:
-        image = cv2.fastNlMeansDenoisingColored(image, None, 10, 10, 7, 21)
-
-    if 'edge_detection' in processing_params:
-        img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        edges = cv2.Canny(img, 100, 200)
-        img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-
-    if 'cropping' in processing_params:
-        try:
-            cropping = processing_params['cropping']
-            x_start, y_start, x_end, y_end = map(int, cropping.split(','))
-            img = img[y_start:y_end, x_start:x_end]
-        except Exception as e:
-            return JsonResponse({'error': "Invalid cropping data"}, status=400)
-
-    if 'rotation_angle' in processing_params:
-        try:
-            rotation_angle = float(processing_params['rotation_angle'])
-            rows, cols = img.shape[:2]
-            center = (cols / 2, rows / 2)
-            rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
-            img = cv2.warpAffine(img, rotation_matrix, (cols, rows))
-        except ValueError:
-            return JsonResponse({"error": "Invalid rotation angle"}, status=400)           
-
-    if 'width' in processing_params and 'height' in processing_params:
-        width = int(processing_params['width'])
-        height = int(processing_params['height'])
-        image = cv2.resize(image, (width, height))
-
-    if 'gaussian_blur' in processing_params:
-        try:
-            kernel_size = int(processing_params['gaussian_blur'])  
-            if kernel_size % 2 == 0:
-                kernel_size += 1  
-            img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
-        except ValueError:
-            return JsonResponse({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
-                
-    if 'contrast' in processing_params or 'brightness' in processing_params:
-        contrast = float(processing_params['contrast']) if 'contrast' in processing_params else 1.0
-        brightness = int(processing_params['brightness']) if 'brightness' in processing_params else 0
-        img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
-            
-    if 'histogram_equalization' in processing_params:
-        if len(img.shape) == 3:  
-            img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
-            img = cv2.equalizeHist(img_gray)
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
-        else:
-            img = cv2.equalizeHist(img)
-
-    if 'corner_detection' in processing_params:
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        gray = np.float32(gray)
-        dst = cv2.cornerHarris(gray, 2, 3, 0.04)
-        dst = cv2.dilate(dst, None)
-        img[dst > 0.01 * dst.max()] = [0, 0, 225]
-
-    if 'Identify_features' in processing_params:
-        gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-        sift = cv2.SIFT_create()
-        keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
-        keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
-        bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
-        matches = bf.match(descriptors1, descriptors2)
-        matches = sorted(matches, key = lambda x:x.distance)
-        image_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-
-    if 'translate_x' in processing_params or 'translate_y' in processing_params:
-        translate_x = float(processing_params['translate_x']) if 'translate_x' in processing_params else 0
-        translate_y = float(processing_params['translate_y']) if 'translate_y' in processing_params else 0
-        M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
-        img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-
-    if 'scale_x' in processing_params or 'scale_y' in processing_params:
-        scale_x = float(processing_params['scale_x']) if 'scale_x' in processing_params else 1.0
-        scale_y = float(processing_params['scale_y']) if 'scale_y' in processing_params else 1.0
-        img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
-
-    if 'shear_x' in processing_params or 'shear_y' in processing_params:
-        shear_x = float(processing_params['shear_x']) if 'shear_x' in processing_params else 0
-        shear_y = float(processing_params['shear_y']) if 'shear_y' in processing_params else 0
-        M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
-        img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-        
-    if 'aligned_image' in processing_params:
-        sift = cv2.SIFT_create()
-        kp1, des1 = sift.detectAndCompute(img, None)
-        kp2, des2 = sift.detectAndCompute(img2, None)
-
-        bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
-        matches = bf.match(des1, des2)
-        matches = sorted(matches, key=lambda x:x.distance)
-
-        src_pts = np.float32([ kp1[m.queryIdx].pt for m in matches ]).reshape(-1,1,2)
-        dst_pts = np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
-
-        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-
-        if len(img.shape) == 2:
-                h, w = img.shape
-        else:
-            h, w, c = img.shape
-
-        img_aligned = cv2.warpPerspective(img, M, (w, h))
-
-    if 'combine_images' in processing_params:
-        mask = np.zeros_like(img, dtype=np.uint8)
-        cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
-
-        img_masked = cv2.bitwise_and(img, mask)
-        img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
-
-        combined = cv2.add(img_masked, img2_masked)
-
-    if 'panorama_image' in processing_params:
-        gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
-
-        orb = cv2.ORB_create()
-        kp1, des1 = orb.detectAndCompute(gray1, None)
-        kp2, des2 = orb.detectAndCompute(gray2, None)
-
-        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-        matches = bf.match(des1, des2)
-
-        matches = sorted(matches, key = lambda x:x.distance)
-
-        points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
-        points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
-
-        h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
-
-        result = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
-        result[0:image.shape[0], 0:image.shape[1]] = image
-
-    # Encoding the image
-    if format_choice == 'jpeg':
-        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-        result, img_encoded = cv2.imencode('.jpg', img, encode_param)
-
-    elif format_choice == 'png':
-        result, img_encoded = cv2.imencode('.png', img)
-
-    elif format_choice == 'bmb':
-        result, img_encoded = cv2.imencode('.bmb', img)
-
-    elif format_choice == 'webp':
-        result, img_encoded = cv2.imencode('.webp', img)
-
-    elif format_choice == 'tiff':
-        result, img_encoded = cv2.imencode('.tiff', img)
-
-    else:
-        raise ValueError("Unsupported format")
-
-    if not result:
-        raise ValueError("The image could not be encoded.")
-
-    if result:
-        media_path = settings.MEDIA_ROOT
-        if not os.path.exists(media_path):
-            os.makedirs(media_path)
-
-        pk = len(os.listdir(media_path)) + 1
-        file_name = f'{pk}.{format_choice}'
-        file_path = os.path.join(media_path, file_name)
-
-        with open(file_path, 'wb') as f:
-            f.write(img_encoded.tobytes())
-
-        image_url = os.path.join(settings.MEDIA_URL, file_name)
-
-        return JsonResponse({
-            'message': 'Image optimized and saved',
-            'image_url': image_url,
-            'image_id': pk
-        })
-
-
-
-
-class ObtainJWTTokenView(APIView):
-    permission_classes = [AllowAny]
-    def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
-
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
-            return JsonResponse({
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-            }, status=status.HTTP_200_OK)
-        
-        return JsonResponse({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-
-
 class OptimizeImageView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes=([MultiPartParser])
@@ -494,289 +99,246 @@ class OptimizeImageView(APIView):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
 
-        processing_params = {            
-        'format_choice':serializer.validated_data.get('format_choice'),
-        'quality': serializer.validated_data.get('quality'),
-        'width':  serializer.validated_data.get('width'),
-        'height':  serializer.validated_data.get('height'),
-        'grayscale' : serializer.validated_data.get('grayscale'),
-        'denoise' : serializer.validated_data.get('denoise'),
-        'edge_detection' : serializer.validated_data.get('edge_detection'),
-        'cropping' : serializer.validated_data.get('cropping'),
-        'rotation_angle' : serializer.validated_data.get('rotation'),
-        'gaussian_blur' : serializer.validated_data.get('gaussian_blur'),
-        'histogram_equalization' : serializer.validated_data.get('histogram_equalization'),
-        'contrast' : serializer.validated_data.get('contrast'),
-        'brightness' : serializer.validated_data.get('brightness'),
-        'corner_detection' : serializer.validated_data.get('corner_detection'),
-        'Identify_features' : serializer.validated_data.get('Identify_features'),
-        'translate_x' : serializer.validated_data.get('translate_x'),
-        'translate_y' : serializer.validated_data.get('translate_y'),
-        'scale_x' : serializer.validated_data.get('scale_x'),
-        'scale_y' : serializer.validated_data.get('scale_y'),
-        'shear_x' : serializer.validated_data.get('shear_x'),
-        'shear_y' : serializer.validated_data.get('shear_y'),
-        'aligned_image' : serializer.validated_data.get('aligned_image'),
-        'combine_images' : serializer.validated_data.get('combine_images'),
-        'panorama_image' :serializer.validated_data.get('panorama'),
-        'panorama': serializer.validated_data.get('panorama'),
-        }
-
-        try:
-            pk, image_url = process_and_save_image(img, processing_params)
-        except ValueError as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-        return JsonResponse({
-            'message': 'Image optimized and saved successfully',
-            'image_url': image_url,
-            'image_id': pk
-    })
+                  
+        format_choice = serializer.validated_data.get('format_choice')
+        quality = serializer.validated_data.get('quality')
+        width = serializer.validated_data.get('width')
+        height = serializer.validated_data.get('height')
+        grayscale = serializer.validated_data.get('grayscale')
+        denoise = serializer.validated_data.get('denoise')
+        edge_detection = serializer.validated_data.get('edge_detection')
+        cropping = serializer.validated_data.get('cropping')
+        rotation_angle = serializer.validated_data.get('rotation')
+        gaussian_blur = serializer.validated_data.get('gaussian_blur')
+        histogram_equalization = serializer.validated_data.get('histogram_equalization')
+        contrast = serializer.validated_data.get('contrast')
+        brightness = serializer.validated_data.get('brightness')
+        corner_detection = serializer.validated_data.get('corner_detection')
+        Identify_features = serializer.validated_data.get('Identify_features')
+        translate_x = serializer.validated_data.get('translate_x')
+        translate_y = serializer.validated_data.get('translate_y')
+        scale_x = serializer.validated_data.get('scale_x')
+        scale_y = serializer.validated_data.get('scale_y')
+        shear_x = serializer.validated_data.get('shear_x')
+        shear_y = serializer.validated_data.get('shear_y')
+        aligned_image = serializer.validated_data.get('aligned_image')
+        combine_images = serializer.validated_data.get('combine_images')
+        panorama_image = serializer.validated_data.get('panorama')
         
-        # if grayscale:
-        #     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        # if denoise:
-        #      img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
+        
+        if grayscale:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        # if edge_detection:
-        #      img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        #      edges = cv2.Canny(img, 100, 200)
-        #      img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+        if denoise:
+             img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
 
-        # if cropping:
-        #       try:
-        #           x_start, y_start, x_end, y_end = map(int, cropping.split(','))
-        #           img = img[y_start:y_end, x_start:x_end]
-        #       except Exception as e:
-        #            return JsonResponse({'erorr': "Invalid cropping data"}, status=400)
+        if edge_detection:
+             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+             edges = cv2.Canny(img, 100, 200)
+             img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
 
-        # if rotation_angle:
-        #      try:
-        #           rotation_angle = float(rotation_angle)
-        #           rows, cols = img.shape[ :2]
-        #           center = (cols / 2, rows / 2)
-        #           rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
-        #           img = cv2.warpAffine(img, rotation_matrix, (cols, rows))
-        #      except ValueError:
-        #           return JsonResponse({"invalid rotation angle"}, status=400)           
+        if cropping:
+              try:
+                  x_start, y_start, x_end, y_end = map(int, cropping.split(','))
+                  img = img[y_start:y_end, x_start:x_end]
+              except Exception as e:
+                   return JsonResponse({'erorr': "Invalid cropping data"}, status=400)
 
-        # if width and height:
-        #      try:
-        #           width = int(width)
-        #           height = int(height)
-        #           img = cv2.resize(img, (width, height))
-        #      except ValueError:
-        #           return JsonResponse({'error': 'Width and Height must be valid integers'}, status=400) 
+        if rotation_angle:
+             try:
+                  rotation_angle = float(rotation_angle)
+                  rows, cols = img.shape[ :2]
+                  center = (cols / 2, rows / 2)
+                  rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
+                  img = cv2.warpAffine(img, rotation_matrix, (cols, rows))
+             except ValueError:
+                  return JsonResponse({"invalid rotation angle"}, status=400)           
 
-        # if gaussian_blur:
-        #     try:
-        #         kernel_size = int(gaussian_blur)  
-        #         if kernel_size % 2 == 0:
-        #             kernel_size += 1  
-        #         img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
-        #     except ValueError:
-        #         return JsonResponse({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
+        if width and height:
+             try:
+                  width = int(width)
+                  height = int(height)
+                  img = cv2.resize(img, (width, height))
+             except ValueError:
+                  return JsonResponse({'error': 'Width and Height must be valid integers'}, status=400) 
+
+        if gaussian_blur:
+            try:
+                kernel_size = int(gaussian_blur)  
+                if kernel_size % 2 == 0:
+                    kernel_size += 1  
+                img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
+            except ValueError:
+                return JsonResponse({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
                 
-        # if contrast or brightness:
-        #     contrast = float(contrast) if contrast else 1.0
-        #     brightness = int(brightness) if brightness else 0
-        #     img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
+        if contrast or brightness:
+            contrast = float(contrast) if contrast else 1.0
+            brightness = int(brightness) if brightness else 0
+            img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
             
-        # if histogram_equalization:
-        #     if len(img.shape) == 3:  
-        #         img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
-        #         img = cv2.equalizeHist(img_gray)
-        #         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
-        #     else:
-        #         img = cv2.equalizeHist(img)
+        if histogram_equalization:
+            if len(img.shape) == 3:  
+                img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
+                img = cv2.equalizeHist(img_gray)
+                img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
+            else:
+                img = cv2.equalizeHist(img)
 
-        # if corner_detection:
-        #      gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        #      gray = np.float32(gray)
-        #      dst = cv2.cornerHarris(gray, 2, 3, 0.04)
-        #      dst = cv2.dilate(dst, None)
-        #      img[dst > 0.01 * dst.max()] = [0, 0, 225]
+        if corner_detection:
+             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+             gray = np.float32(gray)
+             dst = cv2.cornerHarris(gray, 2, 3, 0.04)
+             dst = cv2.dilate(dst, None)
+             img[dst > 0.01 * dst.max()] = [0, 0, 225]
 
-        # if Identify_features:
-        #      gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        #      gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-        #      sift = cv2.SIFT_create()
-        #      keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
-        #      keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
-        #      bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
-        #      matches = bf.match(descriptors1, descriptors2)
-        #      matches = sorted(matches, key = lambda x:x.distance)
-        #      image_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    
-        #      media_path = settings.MEDIA_ROOT
-        #      if not os.path.exists(media_path):
-        #       os.makedirs(media_path)
+        if translate_x or translate_y:
+            M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
+            img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
 
-        #      existing_files = os.listdir(media_path)
-        #      pk = len(existing_files) + 1
-        #      file_name = f'features_{pk}.jpg'
-        #      file_path = os.path.join(media_path, file_name)
+        if scale_x != 1.0 or scale_y != 1.0:
+            img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
 
-        #      cv2.imwrite(file_path, image_matches)
+        if shear_x or shear_y:
+            M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
+            img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
 
-        #      image_url = os.path.join(settings.MEDIA_URL, file_name)
+            if format_choice == 'jpeg':
+                encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+                result, img_encoded = cv2.imencode('.jpg', img, encode_param)
 
-        #      return JsonResponse({
-        #      'message': 'Features identified and matches found',
-        #      'image_url': image_url,
-        #      'image_id': pk  
-        #      })
+            elif format_choice == 'png':
+                result, img_encoded = cv2.imencode('.png', img)
 
+            elif format_choice == 'bmb':
+                result, img_encoded = cv2.imencode('.bmb', img)
 
-        # else:
+            elif format_choice == 'webp':
+                result, img_encoded = cv2.imencode('.webp', img)
 
+            elif format_choice == 'tiff':
+                result, img_encoded = cv2.imencode('.tiff', img)
+
+            else:
+                raise ValueError("Unsupported format")
         
-        #  if translate_x or translate_y:
-        #     M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
-        #     img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+            if not result:
+                raise ValueError("The image could not be encoded.")
 
-        #  if scale_x != 1.0 or scale_y != 1.0:
-        #     img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
 
-        #  if shear_x or shear_y:
-        #     M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
-        #     img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+            media_path = settings.MEDIA_ROOT
+
+            if not os.path.exists(media_path):
+             os.makedirs(media_path)
+
+            existing_files = os.listdir(media_path)
+            pk = len(existing_files) + 1
+
+            file_name = f'id={pk}.{format_choice}'
+            file_path = os.path.join(media_path, file_name)
+
+            with open(file_path, 'wb') as f:
+             f.write(img_encoded.tobytes())
         
+            image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-        #  elif aligned_image:
-        #     sift = cv2.SIFT_create()
-        #     kp1, des1 = sift.detectAndCompute(img, None)
-        #     kp2, des2 = sift.detectAndCompute(img2, None)
+            #  short_url = f"{settings.SITE_URL}/image/{pk}"
 
-        #     bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
-        #     matches = bf.match(des1, des2)
-        #     matches = sorted(matches, key=lambda x:x.distance)
+            return JsonResponse({
+                'message': 'Image optimized and saved',
+                'image_url': image_url,
+                 # 'short_url': short_url,
+                'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
+                 }) 
 
-        #     src_pts = np.float32([ kp1[m.queryIdx].pt for m in matches ]).reshape(-1,1,2)
-        #     dst_pts = np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
+        else:
 
-        #     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
 
-        #     if len(img.shape) == 2:
-        #         h, w = img.shape
-        #     else:
+            if Identify_features:
+                gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+                sift = cv2.SIFT_create()
+                keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
+                keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
+                bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+                matches = bf.match(descriptors1, descriptors2)
+                matches = sorted(matches, key = lambda x:x.distance)
+                image_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
-        #      h, w, c = img.shape
+            
+            if aligned_image:
+                sift = cv2.SIFT_create()
+                kp1, des1 = sift.detectAndCompute(img, None)
+                kp2, des2 = sift.detectAndCompute(img2, None)
 
-        #      img_aligned = cv2.warpPerspective(img, M, (w, h))
+                bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+                matches = bf.match(des1, des2)
+                matches = sorted(matches, key=lambda x:x.distance)
 
-        #     media_path = settings.MEDIA_ROOT
-        #     if not os.path.exists(media_path):
-        #       os.makedirs(media_path)
+                src_pts = np.float32([ kp1[m.queryIdx].pt for m in matches ]).reshape(-1,1,2)
+                dst_pts = np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
 
-        #     existing_files = os.listdir(media_path)
-        #     pk = len(existing_files) + 1
-        #     file_name = f'features2_{pk}.jpg'
-        #     file_path = os.path.join(media_path, file_name)
+                M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
 
-        #     cv2.imwrite(file_path, img_aligned)
-        #     image_url = os.path.join(settings.MEDIA_URL, file_name)
+                if len(img.shape) == 2:
+                    h, w = img.shape
+                else:
 
-        #     return JsonResponse({
-        #      'message': 'Features2 identified and matches found',
-        #      'image_url': image_url,
-        #      'image_id': pk  
-        #      })
+                    h, w, c = img.shape
 
-        #  else:
+                    image_matches = cv2.warpPerspective(img, M, (w, h))
 
-        #    if combine_images:
-        #         mask = np.zeros_like(img, dtype=np.uint8)
-        #         cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
 
-        #         img_masked = cv2.bitwise_and(img, mask)
-        #         img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
+            if combine_images:
+                mask = np.zeros_like(img, dtype=np.uint8)
+                cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
 
-        #         combined = cv2.add(img_masked, img2_masked)
+                img_masked = cv2.bitwise_and(img, mask)
+                img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
 
-        #         media_path = settings.MEDIA_ROOT
-        #         if not os.path.exists(media_path):
-        #          os.makedirs(media_path)
+                image_matches = cv2.add(img_masked, img2_masked)
 
-        #         existing_files = os.listdir(media_path)
-        #         pk = len(existing_files) + 1
-        #         file_name = f'features3_{pk}.jpg'
-        #         file_path = os.path.join(media_path, file_name)
 
-        #         cv2.imwrite(file_path, combined)
-        #         image_url = os.path.join(settings.MEDIA_URL, file_name)
+            if panorama_image:
+                gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
 
-        #         return JsonResponse({
-        #         'message': 'Features3 identified and matches found',
-        #         'image_url': image_url,
-        #         'image_id': pk  
-        #         })
+                orb = cv2.ORB_create()
+                kp1, des1 = orb.detectAndCompute(gray1, None)
+                kp2, des2 = orb.detectAndCompute(gray2, None)
 
-        #    else:
-             
-        #       if panorama_image:
-        #         gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        #         gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+                bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+                matches = bf.match(des1, des2)
 
-        #         orb = cv2.ORB_create()
-        #         kp1, des1 = orb.detectAndCompute(gray1, None)
-        #         kp2, des2 = orb.detectAndCompute(gray2, None)
+                matches = sorted(matches, key = lambda x:x.distance)
 
-        #         bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-        #         matches = bf.match(des1, des2)
+                points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
+                points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
 
-        #         matches = sorted(matches, key = lambda x:x.distance)
+                h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
 
-        #         points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
-        #         points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
+                image_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
+                image_matches[0:image.shape[0], 0:image.shape[1]] = image
 
-        #         h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
 
-        #         result = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
-        #         result[0:image.shape[0], 0:image.shape[1]] = image
+            media_path = settings.MEDIA_ROOT
+            if not os.path.exists(media_path):
+              os.makedirs(media_path)
 
-        #         media_path = settings.MEDIA_ROOT
-        #         if not os.path.exists(media_path):
-        #             os.makedirs(media_path)
+            existing_files = os.listdir(media_path)
+            pk = len(existing_files) + 1
+            file_name = f'features_{pk}.jpg'
+            file_path = os.path.join(media_path, file_name)
 
-        #         existing_files = os.listdir(media_path)
-        #         pk = len(existing_files) + 1
-        #         file_name = f'panorama_{pk}.jpg'
-        #         file_path = os.path.join(media_path, file_name)
+            cv2.imwrite(file_path, image_matches)
 
-        #         cv2.imwrite(file_path, result)
+            image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-        #         image_url = os.path.join(settings.MEDIA_URL, file_name)
-
-        #         return JsonResponse({
-        #      'message': 'Panorama identified and matches found',
-        #      'image_url': image_url,
-        #      'image_id': pk  
-        #      })
-        #       else :
-        
-        #         if format_choice == 'jpeg':
-        #          encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-        #          result, img_encoded = cv2.imencode('.jpg', img, encode_param)
-
-        #         elif format_choice == 'png':
-        #          result, img_encoded = cv2.imencode('.png', img)
-
-        #         elif format_choice == 'bmb':
-        #          result, img_encoded = cv2.imencode('.bmb', img)
-
-        #         elif format_choice == 'webp':
-        #          result, img_encoded = cv2.imencode('.webp', img)
-
-        #         elif format_choice == 'tiff':
-        #          result, img_encoded = cv2.imencode('.tiff', img)
-
-        #         else:
-        #           raise ValueError("Unsupported format")
-        
-        # if not result:
-        #      raise ValueError("The image could not be encoded.")
+            return JsonResponse({
+             'message': 'Features identified and matches found',
+             'image_url': image_url,
+             'image_id': pk  
+            })
 
 
 
