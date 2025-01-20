@@ -258,7 +258,7 @@ class OptimizeImageView(APIView):
                     M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
                     img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
             else:
-                return Response({'erorr': "Invalid combine_images data"}, status=400)
+                return Response({'erorr': "Invalid shear_x or shear_y data"}, status=400)
 
         
 
@@ -300,7 +300,7 @@ class OptimizeImageView(APIView):
                     matches = sorted(matches, key = lambda x:x.distance)
                     Identify_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
             else:
-                return Response({'erorr': "Invalid combine_images data"}, status=400)
+                return Response({'erorr': "Invalid Identify_features data"}, status=400)
 
 
 
@@ -328,7 +328,7 @@ class OptimizeImageView(APIView):
 
                         aligned_matches = cv2.warpPerspective(img, M, (w, h))
             else:
-                return Response({'erorr': "Invalid combine_images data"}, status=400)
+                return Response({'erorr': "Invalid aligned_image data"}, status=400)
 
 
                         
@@ -368,7 +368,7 @@ class OptimizeImageView(APIView):
                     panorama_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
                     panorama_matches[0:image.shape[0], 0:image.shape[1]] = image
             else:
-                return Response({'erorr': "Invalid combine_images data"}, status=400)
+                return Response({'erorr': "Invalid panorama_image data"}, status=400)
 
 
                 
