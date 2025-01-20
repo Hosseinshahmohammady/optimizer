@@ -222,10 +222,10 @@ class OptimizeImageView(APIView):
                     result, img_encoded = cv2.imencode('.tiff', img)
 
                 else:
-                    raise ValueError("Unsupported format")
+                    return Response({"error": "Unsupported format"}, status=400)
         
                 if not result:
-                    raise ValueError("The image could not be encoded.")
+                    return Response({'error': 'The image could not be encoded.'}, status=400)
 
 
                 media_path = settings.MEDIA_ROOT
