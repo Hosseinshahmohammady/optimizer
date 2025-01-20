@@ -166,11 +166,12 @@ class OptimizeImageView(APIView):
 
 
             if edge_detection:
-             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-             edges = cv2.Canny(img, 100, 200)
-             img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-            else:
-                return Response({'error': 'Failed to convert image to edge_detection.'}, status=400)
+             try:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                edges = cv2.Canny(img, 100, 200)
+                img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+             except Exception as e:
+                   return Response({'erorr': "Invalid edge_detection data"}, status=400)
 
 
             if cropping:
@@ -208,51 +209,56 @@ class OptimizeImageView(APIView):
                 return Response({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
                 
             if contrast or brightness:
-                contrast = float(contrast) if contrast else 1.0
-                brightness = int(brightness) if brightness else 0
-                img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
-            else:
-                return Response({'error': 'Failed to convert image to contrast or brightness.'}, status=400)
+                try:
+                    contrast = float(contrast) if contrast else 1.0
+                    brightness = int(brightness) if brightness else 0
+                    img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
+                except Exception as e:
+                   return Response({'erorr': "Invalid contrast or brightness data"}, status=400)
 
             
             if histogram_equalization:
-                if len(img.shape) == 3:  
-                    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
-                    img = cv2.equalizeHist(img_gray)
-                    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
-                else:
-                    img = cv2.equalizeHist(img)
-            else:
-                return Response({'error': 'Failed to convert image to histogram_equalization.'}, status=400)
+                try:
+                    if len(img.shape) == 3:  
+                        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
+                        img = cv2.equalizeHist(img_gray)
+                        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
+                    else:
+                        img = cv2.equalizeHist(img)
+                except Exception as e:
+                   return Response({'erorr': "Invalid histogram_equalization data"}, status=400)
             
             if corner_detection:
-             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-             gray = np.float32(gray)
-             dst = cv2.cornerHarris(gray, 2, 3, 0.04)
-             dst = cv2.dilate(dst, None)
-             img[dst > 0.01 * dst.max()] = [0, 0, 225]
-            else:
-                return Response({'error': 'Failed to convert image to corner_detection.'}, status=400)
-
+             try:
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                gray = np.float32(gray)
+                dst = cv2.cornerHarris(gray, 2, 3, 0.04)
+                dst = cv2.dilate(dst, None)
+                img[dst > 0.01 * dst.max()] = [0, 0, 225]
+             except Exception as e:
+                   return Response({'erorr': "Invalid histogram_equalization data"}, status=400)
 
             if translate_x or translate_y:
-                M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
-                img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-            else:
-                return Response({'error': 'Failed to convert image to translate_x or translate_y.'}, status=400)
+                try:
+                    M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
+                    img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+                except Exception as e:
+                   return Response({'erorr': "Invalid translate_x or translate_y data"}, status=400)
 
 
             if scale_x != 1.0 or scale_y != 1.0:
-                img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
-            else:
-                return Response({'error': 'Failed to convert image to scale_x or scale_y.'}, status=400)
+                try:
+                    img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
+                except Exception as e:
+                   return Response({'erorr': "Invalid scale_x or scale_y data"}, status=400)
 
         
             if shear_x or shear_y:
-                M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
-                img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-            else:
-                return Response({'error': 'Failed to convert image to shear_x or shear_y.'}, status=400)
+                try:
+                    M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
+                    img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+                except Exception as e:
+                   return Response({'erorr': "Invalid shear_x or shear_y data"}, status=400)
 
         
 
@@ -283,46 +289,50 @@ class OptimizeImageView(APIView):
         if img2 is not None:
 
             if Identify_features:
-                gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-                sift = cv2.SIFT_create()
-                keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
-                keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
-                bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
-                matches = bf.match(descriptors1, descriptors2)
-                matches = sorted(matches, key = lambda x:x.distance)
-                Identify_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-            else:
-                return Response({'error': 'Failed to convert image to Identify_features.'}, status=400)
+                try:
+                    gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                    gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+                    sift = cv2.SIFT_create()
+                    keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
+                    keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
+                    bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+                    matches = bf.match(descriptors1, descriptors2)
+                    matches = sorted(matches, key = lambda x:x.distance)
+                    Identify_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+                except Exception as e:
+                   return Response({'erorr': "Invalid Identify_features data"}, status=400)
+
 
 
                          
             if aligned_image:
-                sift = cv2.SIFT_create()
-                kp1, des1 = sift.detectAndCompute(img, None)
-                kp2, des2 = sift.detectAndCompute(img2, None)
+                try:
+                    sift = cv2.SIFT_create()
+                    kp1, des1 = sift.detectAndCompute(img, None)
+                    kp2, des2 = sift.detectAndCompute(img2, None)
 
-                bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
-                matches = bf.match(des1, des2)
-                matches = sorted(matches, key=lambda x:x.distance)
+                    bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+                    matches = bf.match(des1, des2)
+                    matches = sorted(matches, key=lambda x:x.distance)
 
-                src_pts = np.float32([ kp1[m.queryIdx].pt for m in matches ]).reshape(-1,1,2)
-                dst_pts = np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
+                    src_pts = np.float32([ kp1[m.queryIdx].pt for m in matches ]).reshape(-1,1,2)
+                    dst_pts = np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
 
-                M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+                    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
 
-                if len(img.shape) == 2:
-                    h, w = img.shape
-                else:
+                    if len(img.shape) == 2:
+                        h, w = img.shape
+                    else:
 
-                    h, w, c = img.shape
+                        h, w, c = img.shape
 
-                    aligned_matches = cv2.warpPerspective(img, M, (w, h))
-            else:
-                return Response({'error': 'Failed to convert image to aligned_image.'}, status=400)
+                        aligned_matches = cv2.warpPerspective(img, M, (w, h))
+                except Exception as e:
+                   return Response({'erorr': "Invalid aligned_image data"}, status=400)
 
                         
             if combine_images:
+                try:
                     mask = np.zeros_like(img, dtype=np.uint8)
                     cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
 
@@ -330,11 +340,12 @@ class OptimizeImageView(APIView):
                     img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
 
                     combine_matches = cv2.add(img_masked, img2_masked)
-            else:
-                return Response({'error': 'Failed to convert image to combine_images.'}, status=400)
+                except Exception as e:
+                   return Response({'erorr': "Invalid combine_images data"}, status=400)
 
                         
             if panorama_image:
+                try:
                     gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                     gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
 
@@ -354,8 +365,8 @@ class OptimizeImageView(APIView):
 
                     panorama_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
                     panorama_matches[0:image.shape[0], 0:image.shape[1]] = image
-            else:
-                return Response({'error': 'Failed to convert image to panorama_image.'}, status=400)
+                except Exception as e:
+                   return Response({'erorr': "Invalid panorama_image data"}, status=400)
                 
 
             media_path = settings.MEDIA_ROOT
