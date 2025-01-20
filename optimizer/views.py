@@ -145,22 +145,31 @@ class OptimizeImageView(APIView):
         try:
             quality = int(quality)
             if quality < 1 or quality > 100:
-                return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+                return HttpResponse({'error': 'Quality must be between 1 and 100'}, status=400)
         except ValueError:
-            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
+            return HttpResponse({'error': 'Quality must be a valid integer'}, status=400)
         
         if img is not None:
         
             if grayscale:
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            else:
+                return Response({'error': 'Failed to convert image to grayscale.'}, status=400)
+
 
             if denoise:
                 img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
+            else:
+                return Response({'error': 'Failed to convert image to denoise.'}, status=400)
+
 
             if edge_detection:
              img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
              edges = cv2.Canny(img, 100, 200)
              img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+            else:
+                return Response({'error': 'Failed to convert image to edge_detection.'}, status=400)
+
 
             if cropping:
               try:
@@ -200,6 +209,9 @@ class OptimizeImageView(APIView):
                 contrast = float(contrast) if contrast else 1.0
                 brightness = int(brightness) if brightness else 0
                 img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
+            else:
+                return Response({'error': 'Failed to convert image to contrast or brightness.'}, status=400)
+
             
             if histogram_equalization:
                 if len(img.shape) == 3:  
@@ -208,6 +220,8 @@ class OptimizeImageView(APIView):
                     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
                 else:
                     img = cv2.equalizeHist(img)
+            else:
+                return Response({'error': 'Failed to convert image to histogram_equalization.'}, status=400)
             
             if corner_detection:
              gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -215,17 +229,29 @@ class OptimizeImageView(APIView):
              dst = cv2.cornerHarris(gray, 2, 3, 0.04)
              dst = cv2.dilate(dst, None)
              img[dst > 0.01 * dst.max()] = [0, 0, 225]
+            else:
+                return Response({'error': 'Failed to convert image to corner_detection.'}, status=400)
 
-             if translate_x or translate_y:
+
+            if translate_x or translate_y:
                 M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
                 img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+            else:
+                return Response({'error': 'Failed to convert image to translate_x or translate_y.'}, status=400)
+
 
             if scale_x != 1.0 or scale_y != 1.0:
                 img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
+            else:
+                return Response({'error': 'Failed to convert image to scale_x or scale_y.'}, status=400)
+
         
             if shear_x or shear_y:
                 M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
                 img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+            else:
+                return Response({'error': 'Failed to convert image to shear_x or shear_y.'}, status=400)
+
         
 
             if format_choice:
@@ -264,6 +290,9 @@ class OptimizeImageView(APIView):
                 matches = bf.match(descriptors1, descriptors2)
                 matches = sorted(matches, key = lambda x:x.distance)
                 Identify_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+            else:
+                return Response({'error': 'Failed to convert image to Identify_features.'}, status=400)
+
 
                          
             if aligned_image:
@@ -287,9 +316,11 @@ class OptimizeImageView(APIView):
                     h, w, c = img.shape
 
                     aligned_matches = cv2.warpPerspective(img, M, (w, h))
+            else:
+                return Response({'error': 'Failed to convert image to aligned_image.'}, status=400)
 
                         
-                if combine_images:
+            if combine_images:
                     mask = np.zeros_like(img, dtype=np.uint8)
                     cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
 
@@ -297,9 +328,11 @@ class OptimizeImageView(APIView):
                     img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
 
                     combine_matches = cv2.add(img_masked, img2_masked)
+            else:
+                return Response({'error': 'Failed to convert image to combine_images.'}, status=400)
 
                         
-                if panorama_image:
+            if panorama_image:
                     gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                     gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
 
@@ -319,12 +352,14 @@ class OptimizeImageView(APIView):
 
                     panorama_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
                     panorama_matches[0:image.shape[0], 0:image.shape[1]] = image
+            else:
+                return Response({'error': 'Failed to convert image to panorama_image.'}, status=400)
                 
 
-                media_path = settings.MEDIA_ROOT
+            media_path = settings.MEDIA_ROOT
 
-                if not os.path.exists(media_path):
-                    os.makedirs(media_path)
+            if not os.path.exists(media_path):
+                os.makedirs(media_path)
 
                 existing_files = os.listdir(media_path)
                 pk = len(existing_files) + 1
@@ -359,7 +394,7 @@ def show_image(request, pk):
         return HttpResponse("Image not found", status=404)
     
     with open(file_path, 'rb') as image_file:
-        return HttpResponse(image_file.read(), content_type="image/jpeg")
+        return Response(image_file.read(), content_type="image/jpeg")
     
 
 
@@ -373,7 +408,7 @@ def image_id(request, pk):
     
     image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-    return JsonResponse({
+    return Response({
         'message': 'Image found',
         'image_url': image_url,
     })
