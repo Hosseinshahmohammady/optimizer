@@ -157,112 +157,112 @@ class OptimizeImageView(APIView):
                 except Exception as e:
                    return Response({'erorr': "Invalid grayscale data"}, status=400)
             
-
+        try:
             if denoise:
-                try:
+                
                     img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
-                except Exception as e:
-                   return Response({'erorr': "Invalid denoise data"}, status=400)
+        except Exception as e:
+                return Response({'erorr': "Invalid denoise data"}, status=400)
 
-
+        try:
             if edge_detection:
-             try:
+             
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 edges = cv2.Canny(img, 100, 200)
                 img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-             except Exception as e:
+        except Exception as e:
                    return Response({'erorr': "Invalid edge_detection data"}, status=400)
 
-
+        try:
             if cropping:
-              try:
+              
                   x_start, y_start, x_end, y_end = map(int, cropping.split(','))
                   img = img[y_start:y_end, x_start:x_end]
-              except Exception as e:
+        except Exception as e:
                    return Response({'erorr': "Invalid cropping data"}, status=400)
-
+        try:
             if rotation_angle:
-             try:
+             
                   rotation_angle = float(rotation_angle)
                   rows, cols = img.shape[ :2]
                   center = (cols / 2, rows / 2)
                   rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
                   img = cv2.warpAffine(img, rotation_matrix, (cols, rows))
-             except ValueError:
+        except ValueError:
                   return Response({"invalid rotation angle"}, status=400)           
-
+        try:
             if width and height:
-             try:
+             
                   width = int(width)
                   height = int(height)
                   img = cv2.resize(img, (width, height))
-             except ValueError:
+        except ValueError:
                   return Response({'error': 'Width and Height must be valid integers'}, status=400) 
-
+        try:
             if gaussian_blur:
-             try:
+             
                 kernel_size = int(gaussian_blur)  
                 if kernel_size % 2 == 0:
                     kernel_size += 1  
                 img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
-             except ValueError:
+        except ValueError:
                 return Response({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
-                
+        try:      
             if contrast or brightness:
-                try:
+                
                     contrast = float(contrast) if contrast else 1.0
                     brightness = int(brightness) if brightness else 0
                     img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
-                except Exception as e:
+        except Exception as e:
                    return Response({'erorr': "Invalid contrast or brightness data"}, status=400)
 
-            
+        try:  
             if histogram_equalization:
-                try:
+                
                     if len(img.shape) == 3:  
                         img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
                         img = cv2.equalizeHist(img_gray)
                         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
                     else:
                         img = cv2.equalizeHist(img)
-                except Exception as e:
+        except Exception as e:
                    return Response({'erorr': "Invalid histogram_equalization data"}, status=400)
-            
+        try:   
             if corner_detection:
-             try:
+             
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 gray = np.float32(gray)
                 dst = cv2.cornerHarris(gray, 2, 3, 0.04)
                 dst = cv2.dilate(dst, None)
                 img[dst > 0.01 * dst.max()] = [0, 0, 225]
-             except Exception as e:
+        except Exception as e:
                    return Response({'erorr': "Invalid histogram_equalization data"}, status=400)
-
+        try:
             if translate_x or translate_y:
-                try:
+                
                     M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
                     img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-                except Exception as e:
+        except Exception as e:
                    return Response({'erorr': "Invalid translate_x or translate_y data"}, status=400)
 
-
+        try:
             if scale_x != 1.0 or scale_y != 1.0:
-                try:
+                
                     img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
-                except Exception as e:
+        except Exception as e:
                    return Response({'erorr': "Invalid scale_x or scale_y data"}, status=400)
 
-        
+        try:
             if shear_x or shear_y:
                 
                     M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
                     img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-            else:
+        except Exception as e:
                 return Response({'erorr': "Invalid shear_x or shear_y data"}, status=400)
 
         
 
-            if format_choice:
+        if format_choice:
                 if format_choice == 'jpeg':
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
                     result, img_encoded = cv2.imencode('.jpg', img, encode_param)
@@ -287,7 +287,7 @@ class OptimizeImageView(APIView):
 
 
         if img2 is not None:
-
+         try:
             if Identify_features:
                 
                     gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -299,12 +299,12 @@ class OptimizeImageView(APIView):
                     matches = bf.match(descriptors1, descriptors2)
                     matches = sorted(matches, key = lambda x:x.distance)
                     Identify_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-            else:
+         except Exception as e:
                 return Response({'erorr': "Invalid Identify_features data"}, status=400)
 
 
 
-                         
+         try:                
             if aligned_image:
                 
                     sift = cv2.SIFT_create()
@@ -327,11 +327,11 @@ class OptimizeImageView(APIView):
                         h, w, c = img.shape
 
                         aligned_matches = cv2.warpPerspective(img, M, (w, h))
-            else:
+         except Exception as e:
                 return Response({'erorr': "Invalid aligned_image data"}, status=400)
 
 
-                        
+         try:               
             if combine_images:
                 
                     mask = np.zeros_like(img, dtype=np.uint8)
@@ -341,11 +341,11 @@ class OptimizeImageView(APIView):
                     img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
 
                     combine_matches = cv2.add(img_masked, img2_masked)
-            else:
+         except Exception as e:
                 return Response({'erorr': "Invalid combine_images data"}, status=400)
 
 
-                        
+         try:               
             if panorama_image:
                 
                     gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -367,37 +367,37 @@ class OptimizeImageView(APIView):
 
                     panorama_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
                     panorama_matches[0:image.shape[0], 0:image.shape[1]] = image
-            else:
+         except Exception as e:
                 return Response({'erorr': "Invalid panorama_image data"}, status=400)
 
 
                 
 
-            media_path = settings.MEDIA_ROOT
+        media_path = settings.MEDIA_ROOT
 
-            if not os.path.exists(media_path):
-                os.makedirs(media_path)
+        if not os.path.exists(media_path):
+            os.makedirs(media_path)
 
-                existing_files = os.listdir(media_path)
-                pk = len(existing_files) + 1
+            existing_files = os.listdir(media_path)
+            pk = len(existing_files) + 1
 
-                file_name = f'id={pk}.{format_choice}'
-                file_path = os.path.join(media_path, file_name)
+            file_name = f'id={pk}.{format_choice}'
+            file_path = os.path.join(media_path, file_name)
 
-                with open(file_path, 'wb') as f:
-                    f.write(img_encoded.tobytes())
+            with open(file_path, 'wb') as f:
+                f.write(img_encoded.tobytes())
         
-                image_url = os.path.join(settings.MEDIA_URL, file_name)
+            image_url = os.path.join(settings.MEDIA_URL, file_name)
 
                 #  short_url = f"{settings.SITE_URL}/image/{pk}"
 
-                return Response({
+            return Response({
                     'message': 'Image optimized and saved',
                     'image_url': image_url,
                     # 'short_url': short_url,
                     'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
                  }) 
-            else:
+        else:
                 return Response({'message': 'No specific operation was performed'}, status=status.HTTP_200_OK)
      
 
