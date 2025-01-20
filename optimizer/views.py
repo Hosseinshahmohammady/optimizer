@@ -152,10 +152,9 @@ class OptimizeImageView(APIView):
         if img is not None:
         
             if grayscale:
-                try:
+                
                     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                except Exception as e:
-                   return Response({'erorr': "Invalid grayscale data"}, status=400)
+                
             
         try:
             if denoise:
