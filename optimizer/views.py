@@ -377,8 +377,6 @@ class OptimizeImageView(APIView):
             file_name = f'id={pk}.jpg'
             file_path = os.path.join(media_path, file_name)
             
-            image.save(file_path, format='JPEG', quality=quality, optimize=True)
-
             with open(file_path, 'wb') as f:
                 f.write(img_encoded.tobytes())
         
