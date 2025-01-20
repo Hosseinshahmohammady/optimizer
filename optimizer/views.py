@@ -152,15 +152,17 @@ class OptimizeImageView(APIView):
         if img is not None:
         
             if grayscale:
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            else:
-                return Response({'error': 'Failed to convert image to grayscale.'}, status=400)
-
+                try:
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                except Exception as e:
+                   return Response({'erorr': "Invalid grayscale data"}, status=400)
+            
 
             if denoise:
-                img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
-            else:
-                return Response({'error': 'Failed to convert image to denoise.'}, status=400)
+                try:
+                    img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
+                except Exception as e:
+                   return Response({'erorr': "Invalid denoise data"}, status=400)
 
 
             if edge_detection:
