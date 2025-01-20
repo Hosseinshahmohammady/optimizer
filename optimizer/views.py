@@ -141,6 +141,13 @@ class OptimizeImageView(APIView):
         aligned_image = serializer.validated_data.get('aligned_image')
         combine_images = serializer.validated_data.get('combine_images')
         panorama_image = serializer.validated_data.get('panorama')
+
+        try:
+            quality = int(quality)
+            if quality < 1 or quality > 100:
+                return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+        except ValueError:
+            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
         
         if img is not None:
         
