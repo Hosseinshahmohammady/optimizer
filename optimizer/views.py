@@ -116,9 +116,16 @@ class OptimizeImageView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
-                  
+        quality = serializer.validated_data.get('quality')         
+        try:
+            quality = int(quality)
+            if quality < 1 or quality > 100:
+                return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+        except ValueError:
+            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
+        
+        
         format_choice = serializer.validated_data.get('format_choice')
-        quality = serializer.validated_data.get('quality')
         width = serializer.validated_data.get('width')
         height = serializer.validated_data.get('height')
         grayscale = serializer.validated_data.get('grayscale')
@@ -143,19 +150,10 @@ class OptimizeImageView(APIView):
         panorama_image = serializer.validated_data.get('panorama')
 
         
-        
         if img is not None:
-        
-         try:
-            quality = int(quality)
-            quality < 1 or quality > 100
-            return HttpResponse({'error': 'Quality must be between 1 and 100'}, status=400)
-         except ValueError:
-            return HttpResponse({'error': 'Quality must be a valid integer'}, status=400)
             
-        if grayscale:
-                
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            if grayscale:
+             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 
             
         try:
