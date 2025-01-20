@@ -9,6 +9,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from .seializers import ImageUploadSerializer
 import os
@@ -244,7 +245,7 @@ class OptimizeImageView(APIView):
 
             #  short_url = f"{settings.SITE_URL}/image/{pk}"
 
-            return JsonResponse({
+            return Response({
                 'message': 'Image optimized and saved',
                 'image_url': image_url,
                  # 'short_url': short_url,
@@ -252,6 +253,7 @@ class OptimizeImageView(APIView):
                  }) 
 
         else:
+           
 
 
             if Identify_features:
@@ -278,7 +280,7 @@ class OptimizeImageView(APIView):
 
                 image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-                return JsonResponse({
+                return Response({
                     'message': 'Features identified and matches found',
                     'image_url': image_url,
                     'image_id': pk  
@@ -320,7 +322,7 @@ class OptimizeImageView(APIView):
 
                         image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-                        return JsonResponse({
+                        return Response({
                             'message': 'Aligned identified and matches found',
                             'image_url': image_url,
                             'image_id': pk  
@@ -350,7 +352,7 @@ class OptimizeImageView(APIView):
 
                         image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-                        return JsonResponse({
+                        return Response({
                             'message': 'Combine identified and matches found',
                             'image_url': image_url,
                             'image_id': pk  
@@ -393,7 +395,7 @@ class OptimizeImageView(APIView):
 
                             image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-                            return JsonResponse({
+                            return Response({
                                 'message': 'Panorama identified and matches found',
                                 'image_url': image_url,
                                 'image_id': pk  
