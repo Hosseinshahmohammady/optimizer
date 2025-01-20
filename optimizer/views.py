@@ -142,16 +142,18 @@ class OptimizeImageView(APIView):
         combine_images = serializer.validated_data.get('combine_images')
         panorama_image = serializer.validated_data.get('panorama')
 
-        try:
-            quality = int(quality)
-            if quality < 1 or quality > 100:
-                return HttpResponse({'error': 'Quality must be between 1 and 100'}, status=400)
-        except ValueError:
-            return HttpResponse({'error': 'Quality must be a valid integer'}, status=400)
+        
         
         if img is not None:
         
-            if grayscale:
+         try:
+            quality = int(quality)
+            quality < 1 or quality > 100
+            return HttpResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+         except ValueError:
+            return HttpResponse({'error': 'Quality must be a valid integer'}, status=400)
+            
+        if grayscale:
                 
                     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 
