@@ -200,61 +200,62 @@ class OptimizeImageView(APIView):
         if scale_x != 1.0 or scale_y != 1.0:
             img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
 
-        if shear_x or shear_y:
-            M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
-            img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+            if shear_x or shear_y:
+             M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
+             img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
 
-            if format_choice == 'jpeg':
-                encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-                result, img_encoded = cv2.imencode('.jpg', img, encode_param)
+            if format_choice:
+                if format_choice == 'jpeg':
+                    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+                    result, img_encoded = cv2.imencode('.jpg', img, encode_param)
 
-            elif format_choice == 'png':
-                result, img_encoded = cv2.imencode('.png', img)
+                elif format_choice == 'png':
+                    result, img_encoded = cv2.imencode('.png', img)
 
-            elif format_choice == 'bmb':
-                result, img_encoded = cv2.imencode('.bmb', img)
+                elif format_choice == 'bmb':
+                    result, img_encoded = cv2.imencode('.bmb', img)
 
-            elif format_choice == 'webp':
-                result, img_encoded = cv2.imencode('.webp', img)
+                elif format_choice == 'webp':
+                    result, img_encoded = cv2.imencode('.webp', img)
 
-            elif format_choice == 'tiff':
-                result, img_encoded = cv2.imencode('.tiff', img)
+                elif format_choice == 'tiff':
+                    result, img_encoded = cv2.imencode('.tiff', img)
 
-            else:
-                raise ValueError("Unsupported format")
+                else:
+                    raise ValueError("Unsupported format")
         
-            if not result:
-                raise ValueError("The image could not be encoded.")
+                if not result:
+                    raise ValueError("The image could not be encoded.")
 
 
-            media_path = settings.MEDIA_ROOT
+                media_path = settings.MEDIA_ROOT
 
-            if not os.path.exists(media_path):
-             os.makedirs(media_path)
+                if not os.path.exists(media_path):
+                    os.makedirs(media_path)
 
-            existing_files = os.listdir(media_path)
-            pk = len(existing_files) + 1
+                existing_files = os.listdir(media_path)
+                pk = len(existing_files) + 1
 
-            file_name = f'id={pk}.{format_choice}'
-            file_path = os.path.join(media_path, file_name)
+                file_name = f'id={pk}.{format_choice}'
+                file_path = os.path.join(media_path, file_name)
 
-            with open(file_path, 'wb') as f:
-             f.write(img_encoded.tobytes())
+                with open(file_path, 'wb') as f:
+                    f.write(img_encoded.tobytes())
         
-            image_url = os.path.join(settings.MEDIA_URL, file_name)
+                image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-            #  short_url = f"{settings.SITE_URL}/image/{pk}"
+                #  short_url = f"{settings.SITE_URL}/image/{pk}"
 
-            return Response({
-                'message': 'Image optimized and saved',
-                'image_url': image_url,
-                 # 'short_url': short_url,
-                'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
+                return Response({
+                    'message': 'Image optimized and saved',
+                    'image_url': image_url,
+                    # 'short_url': short_url,
+                    'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
                  }) 
+            else:
+                return Response({'message': 'No specific operation was performed'}, status=status.HTTP_200_OK)
 
         else:
-           
-
 
             if Identify_features:
                 gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -285,8 +286,8 @@ class OptimizeImageView(APIView):
                     'image_url': image_url,
                     'image_id': pk  
                 })
-            else:   
-
+            
+            else:
                 if aligned_image:
                     sift = cv2.SIFT_create()
                     kp1, des1 = sift.detectAndCompute(img, None)
@@ -329,7 +330,6 @@ class OptimizeImageView(APIView):
                           })
 
                 else:
-
                     if combine_images:
                         mask = np.zeros_like(img, dtype=np.uint8)
                         cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
@@ -359,7 +359,6 @@ class OptimizeImageView(APIView):
                           })
 
                     else:
-
                         if panorama_image:
                             gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                             gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
@@ -400,6 +399,12 @@ class OptimizeImageView(APIView):
                                 'image_url': image_url,
                                 'image_id': pk  
                                 })
+                
+
+        
+
+
+        
             
             
 
