@@ -254,11 +254,11 @@ class OptimizeImageView(APIView):
 
         
             if shear_x or shear_y:
-                try:
+                
                     M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
                     img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-                except Exception as e:
-                   return Response({'erorr': "Invalid shear_x or shear_y data"}, status=400)
+            else:
+                return Response({'erorr': "Invalid combine_images data"}, status=400)
 
         
 
