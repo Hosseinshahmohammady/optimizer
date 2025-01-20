@@ -71,12 +71,12 @@ class OptimizeImageView(APIView):
     def post(self, request):
         serializer = ImageUploadSerializer(data=request.data)
         if not serializer.is_valid():
-            return JsonResponse({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
      
         image = serializer.validated_data.get('image')
         image2 = serializer.validated_data.get('image2')
         if not image and not image2:
-         return JsonResponse({'error': 'At least one image must be provided'}, status=status.HTTP_400_BAD_REQUEST)
+         return Response({'error': 'At least one image must be provided'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             if image:
@@ -98,7 +98,7 @@ class OptimizeImageView(APIView):
                 img2 = None
 
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+            return Response({'error': str(e)}, status=400)
 
                   
         format_choice = serializer.validated_data.get('format_choice')
@@ -144,7 +144,7 @@ class OptimizeImageView(APIView):
                   x_start, y_start, x_end, y_end = map(int, cropping.split(','))
                   img = img[y_start:y_end, x_start:x_end]
               except Exception as e:
-                   return JsonResponse({'erorr': "Invalid cropping data"}, status=400)
+                   return Response({'erorr': "Invalid cropping data"}, status=400)
 
         if rotation_angle:
              try:
@@ -154,7 +154,7 @@ class OptimizeImageView(APIView):
                   rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
                   img = cv2.warpAffine(img, rotation_matrix, (cols, rows))
              except ValueError:
-                  return JsonResponse({"invalid rotation angle"}, status=400)           
+                  return Response({"invalid rotation angle"}, status=400)           
 
         if width and height:
              try:
@@ -162,7 +162,7 @@ class OptimizeImageView(APIView):
                   height = int(height)
                   img = cv2.resize(img, (width, height))
              except ValueError:
-                  return JsonResponse({'error': 'Width and Height must be valid integers'}, status=400) 
+                  return Response({'error': 'Width and Height must be valid integers'}, status=400) 
 
         if gaussian_blur:
             try:
@@ -171,7 +171,7 @@ class OptimizeImageView(APIView):
                     kernel_size += 1  
                 img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
             except ValueError:
-                return JsonResponse({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
+                return Response({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
                 
         if contrast or brightness:
             contrast = float(contrast) if contrast else 1.0
