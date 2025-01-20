@@ -137,22 +137,10 @@ class OptimizeImageView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=400)
-
-       
-
-        quality = serializer.validated_data.get('quality')  
-        if quality is None:
-            return JsonResponse({'error': 'Quality is required'}, status=400)
-       
-        try:
-            quality = int(quality)
-            if quality < 1 or quality > 100:
-                return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
-        except ValueError:
-            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
         
         
         format_choice = serializer.validated_data.get('format_choice')
+        quality = serializer.validated_data.get('quality')
         width = serializer.validated_data.get('width')
         height = serializer.validated_data.get('height')
         grayscale = serializer.validated_data.get('grayscale')
@@ -176,21 +164,30 @@ class OptimizeImageView(APIView):
         combine_images = serializer.validated_data.get('combine_images')
         panorama_image = serializer.validated_data.get('panorama')
 
+
+        
+        try:
+            quality = int(quality)
+            if quality < 1 or quality > 100:
+                return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
+        except ValueError:
+            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
+
         
         
-        if img is not None:
+        # if img is not None:
             
-            if grayscale:
+        if grayscale:
              img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 
             
         
-            if denoise:
+        if denoise:
                 
                     img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
         
         
-            if edge_detection:
+        if edge_detection:
              
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 edges = cv2.Canny(img, 100, 200)
@@ -198,7 +195,7 @@ class OptimizeImageView(APIView):
         
 
         
-            if cropping:
+        if cropping:
               
                   x_start, y_start, x_end, y_end = map(int, cropping.split(','))
                   img = img[y_start:y_end, x_start:x_end]
@@ -276,9 +273,9 @@ class OptimizeImageView(APIView):
                     img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
 
 
-        if img2 is not None:
+        # if img2 is not None:
          
-           if Identify_features:
+        if Identify_features:
                     gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
                     sift = cv2.SIFT_create()
