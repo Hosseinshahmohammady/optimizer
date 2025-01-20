@@ -89,34 +89,38 @@ class OptimizeImageView(APIView):
         if not serializer.is_valid():
             return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
      
-        image = serializer.validated_data.get('image')
-        image2 = serializer.validated_data.get('image2')
-        if not image and not image2:
-         return Response({'error': 'At least one image must be provided'}, status=status.HTTP_400_BAD_REQUEST)
+        # image = serializer.validated_data.get('image')
+        # image2 = serializer.validated_data.get('image2')
+        # if not image and not image2:
+        #  return Response({'error': 'At least one image must be provided'}, status=status.HTTP_400_BAD_REQUEST)
         
-        try:
-            if image:
-                file_data = image.read()
-                nparr = np.frombuffer(file_data, np.uint8)
-                img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-                if img is None:
-                    raise ValueError("The image could not be decoded.")
-            else:
-                img = None
+        # try:
+        #     if image:
+        #         file_data = image.read()
+        #         nparr = np.frombuffer(file_data, np.uint8)
+        #         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        #         if img is None:
+        #             raise ValueError("The image could not be decoded.")
+        #     else:
+        #         img = None
 
-            if image2:
-                file_data2 = image2.read()
-                nparr2 = np.frombuffer(file_data2, np.uint8)
-                img2 = cv2.imdecode(nparr2, cv2.IMREAD_COLOR)
-                if img2 is None:
-                    raise ValueError("The second image could not be decoded.")
-            else:
-                img2 = None
+        #     if image2:
+        #         file_data2 = image2.read()
+        #         nparr2 = np.frombuffer(file_data2, np.uint8)
+        #         img2 = cv2.imdecode(nparr2, cv2.IMREAD_COLOR)
+        #         if img2 is None:
+        #             raise ValueError("The second image could not be decoded.")
+        #     else:
+        #         img2 = None
 
-        except Exception as e:
-            return Response({'error': str(e)}, status=400)
+        # except Exception as e:
+        #     return Response({'error': str(e)}, status=400)
 
-        quality = serializer.validated_data.get('quality')  
+        image = serializer.validated_data.get('image')
+        if not image: 
+            return JsonResponse({'error': 'No image exist'}, status=400)
+
+        quality = request.data.get('quality')  
         if quality is None:
             return JsonResponse({'error': 'Quality is required'}, status=400)
        
