@@ -263,82 +263,143 @@ class OptimizeImageView(APIView):
                 bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
                 matches = bf.match(descriptors1, descriptors2)
                 matches = sorted(matches, key = lambda x:x.distance)
-                image_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+                Identify_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
-            
-            if aligned_image:
-                sift = cv2.SIFT_create()
-                kp1, des1 = sift.detectAndCompute(img, None)
-                kp2, des2 = sift.detectAndCompute(img2, None)
+                media_path = settings.MEDIA_ROOT
+                if not os.path.exists(media_path):
+                 os.makedirs(media_path)
 
-                bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
-                matches = bf.match(des1, des2)
-                matches = sorted(matches, key=lambda x:x.distance)
+                existing_files = os.listdir(media_path)
+                pk = len(existing_files) + 1
+                file_name = f'features_{pk}.jpg'
+                file_path = os.path.join(media_path, file_name)
 
-                src_pts = np.float32([ kp1[m.queryIdx].pt for m in matches ]).reshape(-1,1,2)
-                dst_pts = np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
+                cv2.imwrite(file_path, Identify_matches)
 
-                M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+                image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-                if len(img.shape) == 2:
-                    h, w = img.shape
+                return JsonResponse({
+                    'message': 'Features identified and matches found',
+                    'image_url': image_url,
+                    'image_id': pk  
+                })
+            else:   
+
+                if aligned_image:
+                    sift = cv2.SIFT_create()
+                    kp1, des1 = sift.detectAndCompute(img, None)
+                    kp2, des2 = sift.detectAndCompute(img2, None)
+
+                    bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+                    matches = bf.match(des1, des2)
+                    matches = sorted(matches, key=lambda x:x.distance)
+
+                    src_pts = np.float32([ kp1[m.queryIdx].pt for m in matches ]).reshape(-1,1,2)
+                    dst_pts = np.float32([ kp2[m.trainIdx].pt for m in matches ]).reshape(-1,1,2)
+
+                    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+
+                    if len(img.shape) == 2:
+                        h, w = img.shape
+                    else:
+
+                        h, w, c = img.shape
+
+                        aligned_matches = cv2.warpPerspective(img, M, (w, h))
+
+                        media_path = settings.MEDIA_ROOT
+                        if not os.path.exists(media_path):
+                            os.makedirs(media_path)
+
+                        existing_files = os.listdir(media_path)
+                        pk = len(existing_files) + 1
+                        file_name = f'features_{pk}.jpg'
+                        file_path = os.path.join(media_path, file_name)
+
+                        cv2.imwrite(file_path, aligned_matches)
+
+                        image_url = os.path.join(settings.MEDIA_URL, file_name)
+
+                        return JsonResponse({
+                            'message': 'Aligned identified and matches found',
+                            'image_url': image_url,
+                            'image_id': pk  
+                          })
+
                 else:
 
-                    h, w, c = img.shape
+                    if combine_images:
+                        mask = np.zeros_like(img, dtype=np.uint8)
+                        cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
 
-                    image_matches = cv2.warpPerspective(img, M, (w, h))
+                        img_masked = cv2.bitwise_and(img, mask)
+                        img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
+
+                        combine_matches = cv2.add(img_masked, img2_masked)
+
+                        media_path = settings.MEDIA_ROOT
+                        if not os.path.exists(media_path):
+                            os.makedirs(media_path)
+
+                        existing_files = os.listdir(media_path)
+                        pk = len(existing_files) + 1
+                        file_name = f'features_{pk}.jpg'
+                        file_path = os.path.join(media_path, file_name)
+
+                        cv2.imwrite(file_path, combine_matches)
+
+                        image_url = os.path.join(settings.MEDIA_URL, file_name)
+
+                        return JsonResponse({
+                            'message': 'Combine identified and matches found',
+                            'image_url': image_url,
+                            'image_id': pk  
+                          })
+
+                    else:
+
+                        if panorama_image:
+                            gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                            gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+
+                            orb = cv2.ORB_create()
+                            kp1, des1 = orb.detectAndCompute(gray1, None)
+                            kp2, des2 = orb.detectAndCompute(gray2, None)
+
+                            bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+                            matches = bf.match(des1, des2)
+
+                            matches = sorted(matches, key = lambda x:x.distance)
+
+                            points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
+                            points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
+
+                            h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+
+                            panorama_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
+                            panorama_matches[0:image.shape[0], 0:image.shape[1]] = image
 
 
-            if combine_images:
-                mask = np.zeros_like(img, dtype=np.uint8)
-                cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
+                            media_path = settings.MEDIA_ROOT
+                            if not os.path.exists(media_path):
+                                os.makedirs(media_path)
 
-                img_masked = cv2.bitwise_and(img, mask)
-                img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
+                            existing_files = os.listdir(media_path)
+                            pk = len(existing_files) + 1
+                            file_name = f'features_{pk}.jpg'
+                            file_path = os.path.join(media_path, file_name)
 
-                image_matches = cv2.add(img_masked, img2_masked)
+                            cv2.imwrite(file_path, panorama_matches)
 
+                            image_url = os.path.join(settings.MEDIA_URL, file_name)
 
-            if panorama_image:
-                gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-                gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
-
-                orb = cv2.ORB_create()
-                kp1, des1 = orb.detectAndCompute(gray1, None)
-                kp2, des2 = orb.detectAndCompute(gray2, None)
-
-                bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-                matches = bf.match(des1, des2)
-
-                matches = sorted(matches, key = lambda x:x.distance)
-
-                points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
-                points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
-
-                h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
-
-                image_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
-                image_matches[0:image.shape[0], 0:image.shape[1]] = image
-
-
-            media_path = settings.MEDIA_ROOT
-            if not os.path.exists(media_path):
-              os.makedirs(media_path)
-
-            existing_files = os.listdir(media_path)
-            pk = len(existing_files) + 1
-            file_name = f'features_{pk}.jpg'
-            file_path = os.path.join(media_path, file_name)
-
-            cv2.imwrite(file_path, image_matches)
-
-            image_url = os.path.join(settings.MEDIA_URL, file_name)
-
-            return JsonResponse({
-             'message': 'Features identified and matches found',
-             'image_url': image_url,
-             'image_id': pk  
-            })
+                            return JsonResponse({
+                                'message': 'Panorama identified and matches found',
+                                'image_url': image_url,
+                                'image_id': pk  
+                                })
+            
+            
 
 
 
