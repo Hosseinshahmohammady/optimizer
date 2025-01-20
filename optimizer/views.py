@@ -289,7 +289,7 @@ class OptimizeImageView(APIView):
         if img2 is not None:
 
             if Identify_features:
-                try:
+                
                     gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
                     sift = cv2.SIFT_create()
@@ -299,14 +299,14 @@ class OptimizeImageView(APIView):
                     matches = bf.match(descriptors1, descriptors2)
                     matches = sorted(matches, key = lambda x:x.distance)
                     Identify_matches = cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-                except Exception as e:
-                   return Response({'erorr': "Invalid Identify_features data"}, status=400)
+            else:
+                return Response({'erorr': "Invalid combine_images data"}, status=400)
 
 
 
                          
             if aligned_image:
-                try:
+                
                     sift = cv2.SIFT_create()
                     kp1, des1 = sift.detectAndCompute(img, None)
                     kp2, des2 = sift.detectAndCompute(img2, None)
@@ -327,12 +327,13 @@ class OptimizeImageView(APIView):
                         h, w, c = img.shape
 
                         aligned_matches = cv2.warpPerspective(img, M, (w, h))
-                except Exception as e:
-                   return Response({'erorr': "Invalid aligned_image data"}, status=400)
+            else:
+                return Response({'erorr': "Invalid combine_images data"}, status=400)
+
 
                         
             if combine_images:
-                try:
+                
                     mask = np.zeros_like(img, dtype=np.uint8)
                     cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
 
@@ -340,12 +341,13 @@ class OptimizeImageView(APIView):
                     img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
 
                     combine_matches = cv2.add(img_masked, img2_masked)
-                except Exception as e:
-                   return Response({'erorr': "Invalid combine_images data"}, status=400)
+            else:
+                return Response({'erorr': "Invalid combine_images data"}, status=400)
+
 
                         
             if panorama_image:
-                try:
+                
                     gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                     gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
 
@@ -365,8 +367,10 @@ class OptimizeImageView(APIView):
 
                     panorama_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
                     panorama_matches[0:image.shape[0], 0:image.shape[1]] = image
-                except Exception as e:
-                   return Response({'erorr': "Invalid panorama_image data"}, status=400)
+            else:
+                return Response({'erorr': "Invalid combine_images data"}, status=400)
+
+
                 
 
             media_path = settings.MEDIA_ROOT
