@@ -118,359 +118,248 @@ class OptimizeImageView(APIView):
         if not image and not image2:
          return Response({'error': 'At least one image must be provided'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # try:
-        #     if image:
-        #         file_data = image.read()
-        #         nparr = np.frombuffer(file_data, np.uint8)
-        #         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        #         if img is None:
-        #             raise ValueError("The image could not be decoded.")
-        #     else:
-        #         img = None
-
-        #     if image2:
-        #         file_data2 = image2.read()
-        #         nparr2 = np.frombuffer(file_data2, np.uint8)
-        #         img2 = cv2.imdecode(nparr2, cv2.IMREAD_COLOR)
-        #         if img2 is None:
-        #             raise ValueError("The second image could not be decoded.")
-        #     else:
-        #         img2 = None
-
-        #     # if img is not None and img2 is not None:
-        #     #     two_images = [img, img2]
-        #     # else:
-        #     #  two_images = None
-            
-        # except Exception as e:
-        #     return Response({'error': str(e)}, status=400)
-        
-
-        # quality = serializer.validated_data.get('quality', 95)
-        # format_choice = serializer.validated_data.get('format_choice')
-        # width = serializer.validated_data.get('width')
-        # height = serializer.validated_data.get('height')
-        # grayscale = serializer.validated_data.get('grayscale')
-        # denoise = serializer.validated_data.get('denoise')
-        # edge_detection = serializer.validated_data.get('edge_detection')
-        # cropping = serializer.validated_data.get('cropping')
-        # rotation_angle = serializer.validated_data.get('rotation')
-        # gaussian_blur = serializer.validated_data.get('gaussian_blur')
-        # histogram_equalization = serializer.validated_data.get('histogram_equalization')
-        # contrast = serializer.validated_data.get('contrast')
-        # brightness = serializer.validated_data.get('brightness')
-        # corner_detection = serializer.validated_data.get('corner_detection')
-        # Identify_features = serializer.validated_data.get('Identify_features')
-        # translate_x = serializer.validated_data.get('translate_x')
-        # translate_y = serializer.validated_data.get('translate_y')
-        # scale_x = serializer.validated_data.get('scale_x')
-        # scale_y = serializer.validated_data.get('scale_y')
-        # shear_x = serializer.validated_data.get('shear_x')
-        # shear_y = serializer.validated_data.get('shear_y')
-        # aligned_image = serializer.validated_data.get('aligned_image')
-        # combine_images = serializer.validated_data.get('combine_images')
-        # panorama_image = serializer.validated_data.get('panorama')
-
-        # try:
-        #     quality = int(quality)
-        #     if quality < 1 or quality > 100:
-        #         return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
-        # except ValueError:
-        #     return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
-        
-
-        # if grayscale:
-        #     cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                  
-
-        # if denoise:
-                
-        #      img = cv2.fastNlMeansDenoisingColored(denoise)
-        
-        
-        # if edge_detection:
-             
-        #         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        #         edges = cv2.Canny(img, 100, 200)
-        #         img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-        
-
-        
-        # if cropping:
-              
-        #           x_start, y_start, x_end, y_end = map(int, cropping.split(','))
-        #           img = img[y_start:y_end, x_start:x_end]
-        
-        
-        # if rotation_angle:
-        #      try:
-        #           rotation_angle = float(rotation_angle)
-        #           rows, cols = img.shape[ :2]
-        #           center = (cols / 2, rows / 2)
-        #           rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
-        #           img = cv2.warpAffine(img, rotation_matrix, (cols, rows))
-        #      except ValueError:
-        #           return Response({"invalid rotation angle"}, status=400) 
-                       
-        
-        # if width and height:
-        #      try:
-        #           width = int(width)
-        #           height = int(height)
-        #           img = cv2.resize(img, (width, height))
-        #      except ValueError:
-        #           return Response({'error': 'Width and Height must be valid integers'}, status=400) 
-             
-        
-        # if gaussian_blur:
-        #      try:
-        #         kernel_size = int(gaussian_blur)  
-        #         if kernel_size % 2 == 0:
-        #             kernel_size += 1  
-        #         img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
-        #      except ValueError:
-        #         return Response({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
-             
-             
-        # if contrast or brightness:
-                
-        #             contrast = float(contrast) if contrast else 1.0
-        #             brightness = int(brightness) if brightness else 0
-        #             img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
-       
-     
-        # if histogram_equalization:
-                
-        #             if len(img.shape) == 3:  
-        #                 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
-        #                 img = cv2.equalizeHist(img_gray)
-        #                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
-        #             else:
-        #                 img = cv2.equalizeHist(img)
-        
-       
-        # if corner_detection:
-             
-        #         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        #         gray = np.float32(gray)
-        #         dst = cv2.cornerHarris(gray, 2, 3, 0.04)
-        #         dst = cv2.dilate(dst, None)
-        #         img[dst > 0.01 * dst.max()] = [0, 0, 225]
-        
-       
-        # if translate_x or translate_y:
-                
-        #             M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
-        #             img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-        
-        
-        # if scale_x != 1.0 or scale_y != 1.0:
-                
-        #             img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
-        
-
-        
-        # if shear_x or shear_y:
-                
-        #             M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
-        #             img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))           
-
-
-
-        # if params.get('panorama_image', False):  
-        #         img = process_panorama(img, img2)   
-                
-
-
-        # if format_choice == 'jpeg':
-        #             encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-        #             result, img_encoded = cv2.imencode('.jpg', img, encode_param)
-
-        # elif format_choice == 'png':
-        #             result, img_encoded = cv2.imencode('.png', img)
-
-        # elif format_choice == 'bmb':
-        #             result, img_encoded = cv2.imencode('.bmb', img)
-
-        # elif format_choice == 'webp':
-        #             result, img_encoded = cv2.imencode('.webp', img)
-
-        # elif format_choice == 'tiff':
-        #             result, img_encoded = cv2.imencode('.tiff', img)
-
-        # else:
-        #             return Response({"error": "Unsupported format"}, status=400)
-        
-        # if not result:
-        #             return Response({'error': 'The image could not be encoded.'}, status=400)
-                 
-            
-            
-        # media_path = settings.MEDIA_ROOT
-
-        # if not os.path.exists(media_path):
-        #         os.makedirs(media_path)
-
-        # existing_files = os.listdir(media_path)
-        # pk = len(existing_files) + 1
-
-        # file_name = f'id={pk}.{format_choice}'
-        # file_path = os.path.join(media_path, file_name)
-            
-        # with open(file_path, 'wb') as f:
-        #         f.write(img_encoded.tobytes())
-        
-        # image_url = os.path.join(settings.MEDIA_URL, file_name)
-
-        #         #  short_url = f"{settings.SITE_URL}/image/{pk}"
-
-        # return Response({
-        #             'message': 'Image optimized and saved',
-        #             'image_url': image_url,
-        #             # 'short_url': short_url,
-        #             'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
-        #          }) 
-
-
         try:
-            img = self.load_image(image)
-            img2 = self.load_image(image2) if image2 else None
+            if image:
+                file_data = image.read()
+                nparr = np.frombuffer(file_data, np.uint8)
+                img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                if img is None:
+                    raise ValueError("The image could not be decoded.")
+            else:
+                img = None
 
+            if image2:
+                file_data2 = image2.read()
+                nparr2 = np.frombuffer(file_data2, np.uint8)
+                img2 = cv2.imdecode(nparr2, cv2.IMREAD_COLOR)
+                if img2 is None:
+                    raise ValueError("The second image could not be decoded.")
+            else:
+                img2 = None
+
+            # if img is not None and img2 is not None:
+            #     two_images = [img, img2]
+            # else:
+            #  two_images = None
+            
         except Exception as e:
             return Response({'error': str(e)}, status=400)
         
-        quality = self.get_quality(serializer)
-        format_choice = serializer.validated_data.get('format_choice')
 
-        if params.get('grayscale', False):
-            img = self.convert_to_grayscale(img)
-
-        if params.get('panorama', False) and img2 is not None:
-            img = self.process_panorama(img, img2)
-
-
-        encoded_img = self.encode_image(img, format_choice, quality)
-        if not encoded_img:
-            return Response({'error': 'The image could not be encoded.'}, status=400)
-        
-        image_url = self.save_image(encoded_img, format_choice)
-
-        return Response({
-            'message': 'Image optimized and saved',
-            'image_url': image_url,
-            'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
-        })
-    
-    
-    def load_image(self, image):
-        """بارگذاری تصویر از داده‌های ورودی"""
-        file_data = image.read()
-        nparr = np.frombuffer(file_data, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        if img is None:
-            raise ValueError("The image could not be decoded.")
-        return img
-
-    def get_quality(self, serializer):
-        """دریافت کیفیت تصویر"""
         quality = serializer.validated_data.get('quality', 95)
+        format_choice = serializer.validated_data.get('format_choice')
+        width = serializer.validated_data.get('width')
+        height = serializer.validated_data.get('height')
+        grayscale = serializer.validated_data.get('grayscale')
+        denoise = serializer.validated_data.get('denoise')
+        edge_detection = serializer.validated_data.get('edge_detection')
+        cropping = serializer.validated_data.get('cropping')
+        rotation_angle = serializer.validated_data.get('rotation')
+        gaussian_blur = serializer.validated_data.get('gaussian_blur')
+        histogram_equalization = serializer.validated_data.get('histogram_equalization')
+        contrast = serializer.validated_data.get('contrast')
+        brightness = serializer.validated_data.get('brightness')
+        corner_detection = serializer.validated_data.get('corner_detection')
+        Identify_features = serializer.validated_data.get('Identify_features')
+        translate_x = serializer.validated_data.get('translate_x')
+        translate_y = serializer.validated_data.get('translate_y')
+        scale_x = serializer.validated_data.get('scale_x')
+        scale_y = serializer.validated_data.get('scale_y')
+        shear_x = serializer.validated_data.get('shear_x')
+        shear_y = serializer.validated_data.get('shear_y')
+        aligned_image = serializer.validated_data.get('aligned_image')
+        combine_images = serializer.validated_data.get('combine_images')
+        panorama_image = serializer.validated_data.get('panorama')
+
         try:
             quality = int(quality)
             if quality < 1 or quality > 100:
-                raise ValueError("Quality must be between 1 and 100")
+                return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
         except ValueError:
-            raise ValueError('Quality must be a valid integer between 1 and 100.')
-        return quality
+            return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
+        
 
-    def convert_to_grayscale(self, img):
-        """تبدیل تصویر به خاکی-سفید"""
-        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if grayscale:
+            cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                  
 
-    def process_panorama(self, img, img2):
-        """ایجاد پانوراما از دو تصویر"""
-        gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+        if denoise:
+                
+             img = cv2.fastNlMeansDenoisingColored(denoise)
+        
+        
+        if edge_detection:
+             
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                edges = cv2.Canny(img, 100, 200)
+                img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+        
 
-        orb = cv2.ORB_create()
-        kp1, des1 = orb.detectAndCompute(gray1, None)
-        kp2, des2 = orb.detectAndCompute(gray2, None)
+        
+        if cropping:
+              
+                  x_start, y_start, x_end, y_end = map(int, cropping.split(','))
+                  img = img[y_start:y_end, x_start:x_end]
+        
+        
+        if rotation_angle:
+             try:
+                  rotation_angle = float(rotation_angle)
+                  rows, cols = img.shape[ :2]
+                  center = (cols / 2, rows / 2)
+                  rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
+                  img = cv2.warpAffine(img, rotation_matrix, (cols, rows))
+             except ValueError:
+                  return Response({"invalid rotation angle"}, status=400) 
+                       
+        
+        if width and height:
+             try:
+                  width = int(width)
+                  height = int(height)
+                  img = cv2.resize(img, (width, height))
+             except ValueError:
+                  return Response({'error': 'Width and Height must be valid integers'}, status=400) 
+             
+        
+        if gaussian_blur:
+             try:
+                kernel_size = int(gaussian_blur)  
+                if kernel_size % 2 == 0:
+                    kernel_size += 1  
+                img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
+             except ValueError:
+                return Response({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
+             
+             
+        if contrast or brightness:
+                
+                    contrast = float(contrast) if contrast else 1.0
+                    brightness = int(brightness) if brightness else 0
+                    img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
+       
+     
+        if histogram_equalization:
+                
+                    if len(img.shape) == 3:  
+                        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
+                        img = cv2.equalizeHist(img_gray)
+                        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
+                    else:
+                        img = cv2.equalizeHist(img)
+        
+       
+        if corner_detection:
+             
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                gray = np.float32(gray)
+                dst = cv2.cornerHarris(gray, 2, 3, 0.04)
+                dst = cv2.dilate(dst, None)
+                img[dst > 0.01 * dst.max()] = [0, 0, 225]
+        
+       
+        if translate_x or translate_y:
+                
+                    M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
+                    img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+        
+        
+        if scale_x != 1.0 or scale_y != 1.0:
+                
+                    img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
+        
 
-        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-        matches = bf.match(des1, des2)
+        
+        if shear_x or shear_y:
+                
+                    M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
+                    img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))           
 
-        matches = sorted(matches, key=lambda x: x.distance)
 
-        points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
-        points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
 
-        h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+        if params.get('panorama_image', False):  
+                img = process_panorama(img, img2)   
+                
 
-        panorama_matches = cv2.warpPerspective(img2, h, (img.shape[1] + img2.shape[1], img.shape[0]))
-        panorama_matches[0:img.shape[0], 0:img.shape[1]] = img
 
-        return panorama_matches
-
-    def encode_image(self, img, format_choice, quality):
-        """انکود کردن تصویر در فرمت دلخواه"""
         if format_choice == 'jpeg':
-            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-            result, img_encoded = cv2.imencode('.jpg', img, encode_param)
-        elif format_choice == 'png':
-            result, img_encoded = cv2.imencode('.png', img)
-        elif format_choice == 'webp':
-            result, img_encoded = cv2.imencode('.webp', img)
-        elif format_choice == 'tiff':
-            result, img_encoded = cv2.imencode('.tiff', img)
-        else:
-            return None
-        return img_encoded if result else None
+                    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+                    result, img_encoded = cv2.imencode('.jpg', img, encode_param)
 
-    def save_image(self, img_encoded, format_choice):
-        """ذخیره‌سازی تصویر در سرور"""
+        elif format_choice == 'png':
+                    result, img_encoded = cv2.imencode('.png', img)
+
+        elif format_choice == 'bmb':
+                    result, img_encoded = cv2.imencode('.bmb', img)
+
+        elif format_choice == 'webp':
+                    result, img_encoded = cv2.imencode('.webp', img)
+
+        elif format_choice == 'tiff':
+                    result, img_encoded = cv2.imencode('.tiff', img)
+
+        else:
+                    return Response({"error": "Unsupported format"}, status=400)
+        
+        if not result:
+                    return Response({'error': 'The image could not be encoded.'}, status=400)
+                 
+            
+            
         media_path = settings.MEDIA_ROOT
 
         if not os.path.exists(media_path):
-            os.makedirs(media_path)
+                os.makedirs(media_path)
 
         existing_files = os.listdir(media_path)
         pk = len(existing_files) + 1
 
         file_name = f'id={pk}.{format_choice}'
         file_path = os.path.join(media_path, file_name)
-
+            
         with open(file_path, 'wb') as f:
-            f.write(img_encoded.tobytes())
-
+                f.write(img_encoded.tobytes())
+        
         image_url = os.path.join(settings.MEDIA_URL, file_name)
-        return image_url
+
+                #  short_url = f"{settings.SITE_URL}/image/{pk}"
+
+        return Response({
+                    'message': 'Image optimized and saved',
+                    'image_url': image_url,
+                    # 'short_url': short_url,
+                    'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
+                 }) 
 
 
 
 
 
 
-# def process_panorama(img, img2):
-#     gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-#     orb = cv2.ORB_create()
-#     kp1, des1 = orb.detectAndCompute(gray1, None)
-#     kp2, des2 = orb.detectAndCompute(gray2, None)
 
-#     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-#     matches = bf.match(des1, des2)
+def process_panorama(img, img2):
+    gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-#     matches = sorted(matches, key=lambda x: x.distance)
+    orb = cv2.ORB_create()
+    kp1, des1 = orb.detectAndCompute(gray1, None)
+    kp2, des2 = orb.detectAndCompute(gray2, None)
 
-#     points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
-#     points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(des1, des2)
 
-#     h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+    matches = sorted(matches, key=lambda x: x.distance)
 
-#     panorama_matches = cv2.warpPerspective(img2, h, (img.shape[1] + img2.shape[1], img.shape[0]))
-#     panorama_matches[0:img.shape[0], 0:img.shape[1]] = img
+    points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
+    points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
 
-#     return panorama_matches
+    h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+
+    panorama_matches = cv2.warpPerspective(img2, h, (img.shape[1] + img2.shape[1], img.shape[0]))
+    panorama_matches[0:img.shape[0], 0:img.shape[1]] = img
+
+    return panorama_matches
 
 
 
