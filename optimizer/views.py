@@ -277,75 +277,26 @@ class OptimizeImageView(APIView):
 
 
 
-        # if params.get('panorama_image', False):  
-        #         img = process_panorama(img, img2)   
-                
-        if panorama_image:
-                
-                    gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-                    gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
-
-                    orb = cv2.ORB_create()
-                    kp1, des1 = orb.detectAndCompute(gray1, None)
-                    kp2, des2 = orb.detectAndCompute(gray2, None)
-
-                    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-                    matches = bf.match(des1, des2)
-
-                    matches = sorted(matches, key = lambda x:x.distance)
-
-                    points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
-                    points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
-
-                    h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
-
-                    panorama_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
-                    panorama_matches[0:image.shape[0], 0:image.shape[1]] = image
-
-                    media_path = settings.MEDIA_ROOT
-
-                    if not os.path.exists(media_path):
-                        os.makedirs(media_path)
-
-                    existing_files = os.listdir(media_path)
-                    pk = len(existing_files) + 1
-
-                    file_name = f'id={pk}.jpg'
-                    file_path = os.path.join(media_path, file_name)
-            
-                    with open(file_path, 'wb') as f:
-                         f.write(panorama_matches.tobytes())
         
-                    image_url = os.path.join(settings.MEDIA_URL, file_name)
-
-                    #  short_url = f"{settings.SITE_URL}/image/{pk}"
-
-                    return Response({
-                         'message': 'Image optimized and saved',
-                         'image_url': image_url,
-                         # 'short_url': short_url,
-                         'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
-                 }) 
-        else:
 
 
-         if format_choice == 'jpeg':
+        if format_choice == 'jpeg':
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
                     result, img_encoded = cv2.imencode('.jpg', img, encode_param)
 
-         elif format_choice == 'png':
+        elif format_choice == 'png':
                     result, img_encoded = cv2.imencode('.png', img)
 
-         elif format_choice == 'bmb':
+        elif format_choice == 'bmb':
                     result, img_encoded = cv2.imencode('.bmb', img)
 
-         elif format_choice == 'webp':
+        elif format_choice == 'webp':
                     result, img_encoded = cv2.imencode('.webp', img)
 
-         elif format_choice == 'tiff':
+        elif format_choice == 'tiff':
                     result, img_encoded = cv2.imencode('.tiff', img)
 
-         else:
+        else:
                     return Response({"error": "Unsupported format"}, status=400)
         
         if not result:
