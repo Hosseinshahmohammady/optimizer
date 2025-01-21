@@ -12,7 +12,7 @@ class ImageUploadSerializer(serializers.Serializer):
     format_choice = serializers.ChoiceField(choices=['jpeg', 'png', 'bmb', 'webp', 'tiff'], default='jpeg')
     cropping = serializers.CharField(required=False)
     rotation = serializers.IntegerField(required=False, default=0)
-    gaussian_blur = serializers.BooleanField(required=False, allow_blank=True)
+    gaussian_blur = serializers.BooleanField(required=False, default=True)
     contrast = serializers.FloatField(required=False, min_value=-100, max_value=100, default=0)  
     brightness = serializers.FloatField(required=False, min_value=-100, max_value=100, default=0)
     corner_detection = serializers.BooleanField(required=False, default=False)
