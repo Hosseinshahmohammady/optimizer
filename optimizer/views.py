@@ -179,107 +179,107 @@ class OptimizeImageView(APIView):
         
 
         
-        if grayscale:
-             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # if grayscale:
+        #      img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 
             
         
-        if denoise:
+        # if denoise:
                 
-             img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
+        #      img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
         
         
-        if edge_detection:
+        # if edge_detection:
              
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                edges = cv2.Canny(img, 100, 200)
-                img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+        #         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        #         edges = cv2.Canny(img, 100, 200)
+        #         img = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
         
 
         
-        if cropping:
+        # if cropping:
               
-                  x_start, y_start, x_end, y_end = map(int, cropping.split(','))
-                  img = img[y_start:y_end, x_start:x_end]
+        #           x_start, y_start, x_end, y_end = map(int, cropping.split(','))
+        #           img = img[y_start:y_end, x_start:x_end]
         
         
-        if rotation_angle:
-             try:
-                  rotation_angle = float(rotation_angle)
-                  rows, cols = img.shape[ :2]
-                  center = (cols / 2, rows / 2)
-                  rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
-                  img = cv2.warpAffine(img, rotation_matrix, (cols, rows))
-             except ValueError:
-                  return Response({"invalid rotation angle"}, status=400) 
+        # if rotation_angle:
+        #      try:
+        #           rotation_angle = float(rotation_angle)
+        #           rows, cols = img.shape[ :2]
+        #           center = (cols / 2, rows / 2)
+        #           rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
+        #           img = cv2.warpAffine(img, rotation_matrix, (cols, rows))
+        #      except ValueError:
+        #           return Response({"invalid rotation angle"}, status=400) 
                        
         
-        if width and height:
-             try:
-                  width = int(width)
-                  height = int(height)
-                  img = cv2.resize(img, (width, height))
-             except ValueError:
-                  return Response({'error': 'Width and Height must be valid integers'}, status=400) 
+        # if width and height:
+        #      try:
+        #           width = int(width)
+        #           height = int(height)
+        #           img = cv2.resize(img, (width, height))
+        #      except ValueError:
+        #           return Response({'error': 'Width and Height must be valid integers'}, status=400) 
              
         
-        if gaussian_blur:
-             try:
-                kernel_size = int(gaussian_blur)  
-                if kernel_size % 2 == 0:
-                    kernel_size += 1  
-                img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
-             except ValueError:
-                return Response({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
+        # if gaussian_blur:
+        #      try:
+        #         kernel_size = int(gaussian_blur)  
+        #         if kernel_size % 2 == 0:
+        #             kernel_size += 1  
+        #         img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
+        #      except ValueError:
+        #         return Response({'error': 'Gaussian blur kernel size must be a valid integer'}, status=400)
              
              
-        if contrast or brightness:
+        # if contrast or brightness:
                 
-                    contrast = float(contrast) if contrast else 1.0
-                    brightness = int(brightness) if brightness else 0
-                    img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
+        #             contrast = float(contrast) if contrast else 1.0
+        #             brightness = int(brightness) if brightness else 0
+        #             img = cv2.convertScaleAbs(img, alpha=contrast, beta=brightness)
        
      
-        if histogram_equalization:
+        # if histogram_equalization:
                 
-                    if len(img.shape) == 3:  
-                        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
-                        img = cv2.equalizeHist(img_gray)
-                        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
-                    else:
-                        img = cv2.equalizeHist(img)
+        #             if len(img.shape) == 3:  
+        #                 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
+        #                 img = cv2.equalizeHist(img_gray)
+        #                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)  
+        #             else:
+        #                 img = cv2.equalizeHist(img)
         
        
-        if corner_detection:
+        # if corner_detection:
              
-                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                gray = np.float32(gray)
-                dst = cv2.cornerHarris(gray, 2, 3, 0.04)
-                dst = cv2.dilate(dst, None)
-                img[dst > 0.01 * dst.max()] = [0, 0, 225]
+        #         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        #         gray = np.float32(gray)
+        #         dst = cv2.cornerHarris(gray, 2, 3, 0.04)
+        #         dst = cv2.dilate(dst, None)
+        #         img[dst > 0.01 * dst.max()] = [0, 0, 225]
         
        
-        if translate_x or translate_y:
+        # if translate_x or translate_y:
                 
-                    M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
-                    img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+        #             M = np.float32([[1, 0, translate_x], [0, 1, translate_y]])
+        #             img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
         
         
-        if scale_x != 1.0 or scale_y != 1.0:
+        # if scale_x != 1.0 or scale_y != 1.0:
                 
-                    img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
+        #             img = cv2.resize(img, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_LINEAR)
         
 
         
-        if shear_x or shear_y:
+        # if shear_x or shear_y:
                 
-                    M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
-                    img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))           
+        #             M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
+        #             img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))           
 
 
 
-        # if params.get('panorama_image', False):  
-        #         img = process_panorama(img, img2)   
+        if params.get('panorama_image', False):  
+                img = process_panorama(img, img2)   
                 
 
 
