@@ -180,12 +180,10 @@ class OptimizeImageView(APIView):
         
 
         
-        if grayscale:
-            img = convert_to_grayscale(img)
+        self.grayscale = grayscale
 
-                
-        if denoise:
-             img = convert_to_denoise(img, None, 10, 10, 7, 21)   
+
+                  
 
         # if denoise:
                 
@@ -336,12 +334,8 @@ class OptimizeImageView(APIView):
                  }) 
 
 
-def convert_to_denoise(img):
-     return cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
-
-
-def convert_to_grayscale(img):
-    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+def convert_to_grayscale(self, img):
+        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
 
