@@ -140,13 +140,15 @@ class OptimizeImageView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
-        quality = serializer.validated_data.get('quality')
+        quality = request.data.get('quality', 95)
         try:
             quality = int(quality)
             if quality < 1 or quality > 100:
                 return JsonResponse({'error': 'Quality must be between 1 and 100'}, status=400)
         except ValueError:
             return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
+        
+
 
 
 
