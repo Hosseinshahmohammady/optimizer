@@ -161,7 +161,7 @@ class OptimizeImageView(APIView):
         file_path = os.path.join(media_path, file_name)
 
         with open(file_path, 'wb') as f:
-                f.write(img.tobytes())
+                f.write(image.tobytes())
 
         image_url = os.path.join(settings.MEDIA_URL, file_name)
         #  short_url = f"{settings.SITE_URL}/image/{pk}"
