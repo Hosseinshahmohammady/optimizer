@@ -180,11 +180,10 @@ class OptimizeImageView(APIView):
         
 
         
-        # if grayscale:
-        #      img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if params.get('grayscale', False):
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 
             
-        
         # if denoise:
                 
         #      img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
@@ -334,7 +333,6 @@ class OptimizeImageView(APIView):
                  }) 
 
 
-logger = logging.getLogger(__name__)
 
 def process_panorama(img, img2):
     gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -343,10 +341,6 @@ def process_panorama(img, img2):
     orb = cv2.ORB_create()
     kp1, des1 = orb.detectAndCompute(gray1, None)
     kp2, des2 = orb.detectAndCompute(gray2, None)
-
-    if len(kp1) == 0 or len(kp2) == 0:
-        print("No keypoints found!")
-        return None
 
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = bf.match(des1, des2)
@@ -358,19 +352,10 @@ def process_panorama(img, img2):
 
     h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
 
-    if h is None:
-        logger.error("Homography could not be computed.")  # لاگ‌گذاری
-        return None
-
     panorama_matches = cv2.warpPerspective(img2, h, (img.shape[1] + img2.shape[1], img.shape[0]))
     panorama_matches[0:img.shape[0], 0:img.shape[1]] = img
 
     return panorama_matches
-
-
-
-
-
 
 
 
