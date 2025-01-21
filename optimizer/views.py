@@ -326,26 +326,26 @@ class OptimizeImageView(APIView):
                          # 'short_url': short_url,
                          'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
                  }) 
+        else:
 
 
-
-        if format_choice == 'jpeg':
+         if format_choice == 'jpeg':
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
                     result, img_encoded = cv2.imencode('.jpg', img, encode_param)
 
-        elif format_choice == 'png':
+         elif format_choice == 'png':
                     result, img_encoded = cv2.imencode('.png', img)
 
-        elif format_choice == 'bmb':
+         elif format_choice == 'bmb':
                     result, img_encoded = cv2.imencode('.bmb', img)
 
-        elif format_choice == 'webp':
+         elif format_choice == 'webp':
                     result, img_encoded = cv2.imencode('.webp', img)
 
-        elif format_choice == 'tiff':
+         elif format_choice == 'tiff':
                     result, img_encoded = cv2.imencode('.tiff', img)
 
-        else:
+         else:
                     return Response({"error": "Unsupported format"}, status=400)
         
         if not result:
