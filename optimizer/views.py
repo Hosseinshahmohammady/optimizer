@@ -14,7 +14,6 @@ from drf_yasg.utils import swagger_auto_schema
 from .seializers import ImageUploadSerializer
 import os
 import cv2
-from PIL import Image
 import numpy as np
 from .forms import SignUpForm, LoginForm
 from django.shortcuts import render, redirect
@@ -180,7 +179,7 @@ class OptimizeImageView(APIView):
         
 
         if image and image2:
-
+         try:        
             if Identify_features:
                     gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -273,10 +272,13 @@ class OptimizeImageView(APIView):
                      'image_url': image_url,
                      # 'short_url': short_url,
                       'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
+             
                     }) 
+         except Exception as e:
+            return Response({'error': str(e)}, status=400)
 
         else:
-
+         try:
             if grayscale:
              img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 
@@ -424,6 +426,8 @@ class OptimizeImageView(APIView):
                     # 'short_url': short_url,
                     'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
                  }) 
+         except Exception as e:
+            return Response({'error': str(e)}, status=400)
 
 
 
