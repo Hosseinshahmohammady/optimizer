@@ -277,9 +277,56 @@ class OptimizeImageView(APIView):
 
 
 
-        if params.get('panorama_image', False):  
-                img = process_panorama(img, img2)   
+        # if params.get('panorama_image', False):  
+        #         img = process_panorama(img, img2)   
                 
+        if panorama_image:
+                
+                    gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                    gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+
+                    orb = cv2.ORB_create()
+                    kp1, des1 = orb.detectAndCompute(gray1, None)
+                    kp2, des2 = orb.detectAndCompute(gray2, None)
+
+                    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+                    matches = bf.match(des1, des2)
+
+                    matches = sorted(matches, key = lambda x:x.distance)
+
+                    points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
+                    points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
+
+                    h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+
+                    panorama_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
+                    panorama_matches[0:image.shape[0], 0:image.shape[1]] = image
+
+                    media_path = settings.MEDIA_ROOT
+
+                    if not os.path.exists(media_path):
+                        os.makedirs(media_path)
+
+                    existing_files = os.listdir(media_path)
+                    pk = len(existing_files) + 1
+
+                    file_name = f'id={pk}.format_choice'
+                    file_path = os.path.join(media_path, file_name)
+            
+                    with open(file_path, 'wb') as f:
+                         f.write(img_encoded.tobytes())
+        
+                    image_url = os.path.join(settings.MEDIA_URL, file_name)
+
+                    #  short_url = f"{settings.SITE_URL}/image/{pk}"
+
+                    return Response({
+                         'message': 'Image optimized and saved',
+                         'image_url': image_url,
+                         # 'short_url': short_url,
+                         'image_id': 'Enter your browser : http://172.105.38.184:8000/api/pk/'
+                 }) 
+
 
 
         if format_choice == 'jpeg':
@@ -338,28 +385,28 @@ class OptimizeImageView(APIView):
 
 
 
-def process_panorama(img, img2):
-    gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+# def process_panorama(img, img2):
+#     gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-    orb = cv2.ORB_create()
-    kp1, des1 = orb.detectAndCompute(gray1, None)
-    kp2, des2 = orb.detectAndCompute(gray2, None)
+#     orb = cv2.ORB_create()
+#     kp1, des1 = orb.detectAndCompute(gray1, None)
+#     kp2, des2 = orb.detectAndCompute(gray2, None)
 
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    matches = bf.match(des1, des2)
+#     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+#     matches = bf.match(des1, des2)
 
-    matches = sorted(matches, key=lambda x: x.distance)
+#     matches = sorted(matches, key=lambda x: x.distance)
 
-    points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
-    points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
+#     points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
+#     points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
 
-    h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+#     h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
 
-    panorama_matches = cv2.warpPerspective(img2, h, (img.shape[1] + img2.shape[1], img.shape[0]))
-    panorama_matches[0:img.shape[0], 0:img.shape[1]] = img
+#     panorama_matches = cv2.warpPerspective(img2, h, (img.shape[1] + img2.shape[1], img.shape[0]))
+#     panorama_matches[0:img.shape[0], 0:img.shape[1]] = img
 
-    return panorama_matches
+#     return panorama_matches
 
 
 
