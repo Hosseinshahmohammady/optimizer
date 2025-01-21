@@ -278,8 +278,8 @@ class OptimizeImageView(APIView):
 
 
 
-        if params.get('panorama_image', False):  
-                img = process_panorama(img, img2)   
+        # if params.get('panorama_image', False):  
+        #         img = process_panorama(img, img2)   
                 
 
 
