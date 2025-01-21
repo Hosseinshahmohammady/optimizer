@@ -149,7 +149,6 @@ class OptimizeImageView(APIView):
             return JsonResponse({'error': 'Quality must be a valid integer'}, status=400)
 
 
-        image = Image.open(image)
 
         media_path = settings.MEDIA_ROOT
         if not os.path.exists(media_path):
@@ -161,7 +160,8 @@ class OptimizeImageView(APIView):
         file_name = f'id={pk}.jpg'
         file_path = os.path.join(media_path, file_name)
 
-        image.save(file_path, format='JPEG', quality=quality)
+        with open(file_path, 'wb') as f:
+                f.write(img.tobytes())
 
         image_url = os.path.join(settings.MEDIA_URL, file_name)
         #  short_url = f"{settings.SITE_URL}/image/{pk}"
