@@ -378,7 +378,7 @@ class OptimizeImageView(APIView):
 
                  
                 
-            if format_choice == 'jpg':
+            if format_choice == 'jpeg':
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
                     result, img_encoded = cv2.imencode('.jpg', img, encode_param)
 
