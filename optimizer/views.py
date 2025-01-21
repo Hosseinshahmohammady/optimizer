@@ -11,7 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
-from .seializers import ImageUploadSerializer
+# from .seializers import ImageUploadSerializer
 import os
 import cv2
 import numpy as np
