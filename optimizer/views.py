@@ -310,11 +310,11 @@ class OptimizeImageView(APIView):
                     existing_files = os.listdir(media_path)
                     pk = len(existing_files) + 1
 
-                    file_name = f'id={pk}.format_choice'
+                    file_name = f'id={pk}.jpg'
                     file_path = os.path.join(media_path, file_name)
             
                     with open(file_path, 'wb') as f:
-                         f.write(img_encoded.tobytes())
+                         f.write(panorama_matches.tobytes())
         
                     image_url = os.path.join(settings.MEDIA_URL, file_name)
 
