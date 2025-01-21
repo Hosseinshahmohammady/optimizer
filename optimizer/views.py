@@ -111,7 +111,7 @@ class OptimizeImageView(APIView):
         if not serializer.is_valid():
             return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
      
-        
+        params = request.data
         image = serializer.validated_data.get('image')
         image2 = serializer.validated_data.get('image2')
         if not image and not image2:
@@ -140,10 +140,10 @@ class OptimizeImageView(APIView):
             #     two_images = [img, img2]
             # else:
             #  two_images = None
-
-
+            
         except Exception as e:
             return Response({'error': str(e)}, status=400)
+        
 
         quality = serializer.validated_data.get('quality', 95)
         format_choice = serializer.validated_data.get('format_choice')
@@ -228,27 +228,27 @@ class OptimizeImageView(APIView):
                     combine_matches = cv2.add(img_masked, img2_masked)
 
 
-            if panorama_image:
+            # if panorama_image:
                 
-                    gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-                    gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+            #         gray1 = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            #         gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
 
-                    orb = cv2.ORB_create()
-                    kp1, des1 = orb.detectAndCompute(gray1, None)
-                    kp2, des2 = orb.detectAndCompute(gray2, None)
+            #         orb = cv2.ORB_create()
+            #         kp1, des1 = orb.detectAndCompute(gray1, None)
+            #         kp2, des2 = orb.detectAndCompute(gray2, None)
 
-                    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-                    matches = bf.match(des1, des2)
+            #         bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+            #         matches = bf.match(des1, des2)
 
-                    matches = sorted(matches, key = lambda x:x.distance)
+            #         matches = sorted(matches, key = lambda x:x.distance)
 
-                    points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
-                    points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
+            #         points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
+            #         points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
 
-                    h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+            #         h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
 
-                    panorama_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
-                    panorama_matches[0:image.shape[0], 0:image.shape[1]] = image
+            #         panorama_matches = cv2.warpPerspective(image2, h, (image.shape[1] + image2.shape[1], image.shape[0]))
+            #         panorama_matches[0:image.shape[0], 0:image.shape[1]] = image
 
 
                     media_path = settings.MEDIA_ROOT
@@ -376,8 +376,13 @@ class OptimizeImageView(APIView):
                     M = np.float32([[1, shear_x, 0], [shear_y, 1, 0]])
                     img = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))           
 
-                 
+
+
+            if params.get('panorama_image', False):  
+                img = process_panorama(img, img2)   
                 
+
+
             if format_choice == 'jpeg':
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
                     result, img_encoded = cv2.imencode('.jpg', img, encode_param)
@@ -431,7 +436,28 @@ class OptimizeImageView(APIView):
 
 
 
+def process_panorama(img, img2):
+    gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
+    orb = cv2.ORB_create()
+    kp1, des1 = orb.detectAndCompute(gray1, None)
+    kp2, des2 = orb.detectAndCompute(gray2, None)
+
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(des1, des2)
+
+    matches = sorted(matches, key=lambda x: x.distance)
+
+    points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
+    points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
+
+    h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+
+    panorama_matches = cv2.warpPerspective(img2, h, (img.shape[1] + img2.shape[1], img.shape[0]))
+    panorama_matches[0:img.shape[0], 0:img.shape[1]] = img
+
+    return panorama_matches
 
 
 
