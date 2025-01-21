@@ -180,8 +180,9 @@ class OptimizeImageView(APIView):
         
 
         
-        if params.get('grayscale', False):
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if grayscale:
+            img = convert_to_grayscale(img)
+
                 
             
         # if denoise:
@@ -359,6 +360,8 @@ def process_panorama(img, img2):
 
 
 
+def convert_to_grayscale(image):
+    return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
 
