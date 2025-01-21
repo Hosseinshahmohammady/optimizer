@@ -342,6 +342,10 @@ def process_panorama(img, img2):
     kp1, des1 = orb.detectAndCompute(gray1, None)
     kp2, des2 = orb.detectAndCompute(gray2, None)
 
+    if len(kp1) == 0 or len(kp2) == 0:
+        print("No keypoints found!")
+        return None
+
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = bf.match(des1, des2)
 
@@ -351,6 +355,10 @@ def process_panorama(img, img2):
     points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
 
     h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+
+    if h is None:
+        print("Homography could not be computed.")
+        return None
 
     panorama_matches = cv2.warpPerspective(img2, h, (img.shape[1] + img2.shape[1], img.shape[0]))
     panorama_matches[0:img.shape[0], 0:img.shape[1]] = img
