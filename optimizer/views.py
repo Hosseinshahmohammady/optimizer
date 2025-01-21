@@ -184,10 +184,12 @@ class OptimizeImageView(APIView):
             img = convert_to_grayscale(img)
 
                 
-            
+        if denoise:
+             img = convert_to_denoise(img, None, 10, 10, 7, 21)   
+
         # if denoise:
                 
-        #      img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
+        #      img = cv2.fastNlMeansDenoisingColored(denoise)
         
         
         # if edge_detection:
@@ -334,6 +336,14 @@ class OptimizeImageView(APIView):
                  }) 
 
 
+def convert_to_denoise(img):
+     return cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
+
+
+def convert_to_grayscale(img):
+    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+
 
 def process_panorama(img, img2):
     gray1 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -359,9 +369,6 @@ def process_panorama(img, img2):
     return panorama_matches
 
 
-
-def convert_to_grayscale(image):
-    return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
 
