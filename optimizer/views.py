@@ -185,82 +185,49 @@ class OptimizeImageView(APIView):
 
     def create_panorama(self, img1, img2):
         try:
-            # تنظیم اندازه تصاویر به صورت هوشمند
-            max_height = 800
-            h1, w1 = img1.shape[:2]
-            h2, w2 = img2.shape[:2]
+            # Set fixed dimensions for both images
+            target_width = 800
+            target_height = 600
             
-            scale1 = max_height / h1
-            scale2 = max_height / h2
-            
-            img1 = cv2.resize(img1, (int(w1 * scale1), int(h1 * scale1)))
-            img2 = cv2.resize(img2, (int(w2 * scale2), int(h2 * scale2)))
+            # Resize both images to the same dimensions
+            img1 = cv2.resize(img1, (target_width, target_height))
+            img2 = cv2.resize(img2, (target_width, target_height))
 
-            # تشخیص و تطبیق ویژگی‌ها
+            # Feature detection and matching
             sift = cv2.SIFT_create(nfeatures=3000)
             kp1, des1 = sift.detectAndCompute(img1, None)
             kp2, des2 = sift.detectAndCompute(img2, None)
 
-            # تنظیمات FLANN برای تطبیق دقیق‌تر
+            # FLANN matching
             index_params = dict(algorithm=1, trees=5)
             search_params = dict(checks=100)
             flann = cv2.FlannBasedMatcher(index_params, search_params)
-            
             matches = flann.knnMatch(des1, des2, k=2)
 
-            # فیلتر کردن matches با کیفیت
+            # Filter good matches
             good_matches = []
             for m, n in matches:
                 if m.distance < 0.75 * n.distance:
                     good_matches.append(m)
 
-            # محاسبه ماتریس همگرافی با دقت بالاتر
             if len(good_matches) >= 4:
                 src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
                 dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
                 
                 H, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 3.0)
                 
-                # محاسبه ابعاد نهایی با حفظ نسبت تصویر
-                h1, w1 = img1.shape[:2]
-                h2, w2 = img2.shape[:2]
-                
-                corners = np.float32([[0, 0], [0, h2-1], [w2-1, h2-1], [w2-1, 0]]).reshape(-1, 1, 2)
-                transformed_corners = cv2.perspectiveTransform(corners, H)
-                
-                [xmin, ymin] = np.int32(transformed_corners.min(axis=0).ravel())
-                [xmax, ymax] = np.int32(transformed_corners.max(axis=0).ravel())
-                
-                # تنظیم ماتریس انتقال
-                translation = [-xmin, -ymin]
-                H_translation = np.array([
-                    [1, 0, translation[0]],
-                    [0, 1, translation[1]],
-                    [0, 0, 1]
-                ])
-                
-                # ایجاد تصویر نهایی
-                output_size = (xmax - xmin, ymax - ymin)
-                result = cv2.warpPerspective(img2, H_translation.dot(H), output_size)
-                
-                # ترکیب تصویر اول
-                result[translation[1]:h1+translation[1], translation[0]:w1+translation[0]] = img1
-                
-                # برش حاشیه‌های اضافی
-                gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-                _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
-                contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                
-                if contours:
-                    x, y, w, h = cv2.boundingRect(contours[0])
-                    result = result[y:y+h, x:x+w]
+                # Create panorama with fixed dimensions
+                result_width = target_width * 2  # Double width for panorama
+                result = cv2.warpPerspective(img2, H, (result_width, target_height))
+                result[0:target_height, 0:target_width] = img1
                 
                 return result
             else:
-                raise ValueError("تعداد نقاط مشترک کافی نیست")
+                raise ValueError("Not enough matching points")
 
         except Exception as e:
-            raise ValueError(f"خطا در ایجاد پانوراما: {str(e)}")
+            raise ValueError(f"Panorama creation error: {str(e)}")
+
 
 
 
