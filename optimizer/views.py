@@ -185,58 +185,83 @@ class OptimizeImageView(APIView):
 
     def create_panorama(self, img1, img2):
         try:
-            # Resize images to similar dimensions for better matching
+            # تنظیم اندازه تصاویر به صورت هوشمند
+            max_height = 800
             h1, w1 = img1.shape[:2]
             h2, w2 = img2.shape[:2]
-            target_height = min(h1, h2)
-            img1 = cv2.resize(img1, (int(w1 * target_height / h1), target_height))
-            img2 = cv2.resize(img2, (int(w2 * target_height / h2), target_height))
             
-            # Convert to grayscale
-            gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-            gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+            scale1 = max_height / h1
+            scale2 = max_height / h2
+            
+            img1 = cv2.resize(img1, (int(w1 * scale1), int(h1 * scale1)))
+            img2 = cv2.resize(img2, (int(w2 * scale2), int(h2 * scale2)))
 
-            # Create SIFT detector with increased features
-            sift = cv2.SIFT_create(nfeatures=5000)
-            kp1, des1 = sift.detectAndCompute(gray1, None)
-            kp2, des2 = sift.detectAndCompute(gray2, None)
+            # تشخیص و تطبیق ویژگی‌ها
+            sift = cv2.SIFT_create(nfeatures=3000)
+            kp1, des1 = sift.detectAndCompute(img1, None)
+            kp2, des2 = sift.detectAndCompute(img2, None)
 
-            # FLANN matcher
-            FLANN_INDEX_KDTREE = 1
-            index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-            search_params = dict(checks=50)
+            # تنظیمات FLANN برای تطبیق دقیق‌تر
+            index_params = dict(algorithm=1, trees=5)
+            search_params = dict(checks=100)
             flann = cv2.FlannBasedMatcher(index_params, search_params)
             
-            # Find matches with k=2 for Lowe's ratio test
             matches = flann.knnMatch(des1, des2, k=2)
 
-            # Apply Lowe's ratio test with relaxed threshold
+            # فیلتر کردن matches با کیفیت
             good_matches = []
             for m, n in matches:
-                if m.distance < 0.8 * n.distance:  # Increased threshold
+                if m.distance < 0.75 * n.distance:
                     good_matches.append(m)
 
-            if len(good_matches) < 4:
-                raise ValueError("Not enough matching points found between images")
-
-            # Get corresponding points
-            src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-            dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-
-            # Find homography with more relaxed RANSAC parameters
-            H, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 
-                                    ransacReprojThreshold=5.0,  # Increased threshold
-                                    maxIters=2000,  # More iterations
-                                    confidence=0.995)  # Higher confidence
-
-            # Create panorama with computed dimensions
-            result = cv2.warpPerspective(img2, H, (img1.shape[1] + img2.shape[1], img1.shape[0]))
-            result[0:img1.shape[0], 0:img1.shape[1]] = img1
-
-            return result
+            # محاسبه ماتریس همگرافی با دقت بالاتر
+            if len(good_matches) >= 4:
+                src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+                dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+                
+                H, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 3.0)
+                
+                # محاسبه ابعاد نهایی با حفظ نسبت تصویر
+                h1, w1 = img1.shape[:2]
+                h2, w2 = img2.shape[:2]
+                
+                corners = np.float32([[0, 0], [0, h2-1], [w2-1, h2-1], [w2-1, 0]]).reshape(-1, 1, 2)
+                transformed_corners = cv2.perspectiveTransform(corners, H)
+                
+                [xmin, ymin] = np.int32(transformed_corners.min(axis=0).ravel())
+                [xmax, ymax] = np.int32(transformed_corners.max(axis=0).ravel())
+                
+                # تنظیم ماتریس انتقال
+                translation = [-xmin, -ymin]
+                H_translation = np.array([
+                    [1, 0, translation[0]],
+                    [0, 1, translation[1]],
+                    [0, 0, 1]
+                ])
+                
+                # ایجاد تصویر نهایی
+                output_size = (xmax - xmin, ymax - ymin)
+                result = cv2.warpPerspective(img2, H_translation.dot(H), output_size)
+                
+                # ترکیب تصویر اول
+                result[translation[1]:h1+translation[1], translation[0]:w1+translation[0]] = img1
+                
+                # برش حاشیه‌های اضافی
+                gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+                _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
+                contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                
+                if contours:
+                    x, y, w, h = cv2.boundingRect(contours[0])
+                    result = result[y:y+h, x:x+w]
+                
+                return result
+            else:
+                raise ValueError("تعداد نقاط مشترک کافی نیست")
 
         except Exception as e:
-            raise ValueError(f"Error creating panorama: {str(e)}")
+            raise ValueError(f"خطا در ایجاد پانوراما: {str(e)}")
+
 
 
 
