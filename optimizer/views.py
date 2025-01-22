@@ -184,66 +184,35 @@ class OptimizeImageView(APIView):
             raise ValueError(f"Error processing image: {str(e)}")
 
     def create_panorama(self, img1, img2):
-            try:
-                # تنظیم اندازه یکسان
-                target_height = 600
-                target_width = 800
-                img1 = cv2.resize(img1, (target_width, target_height))
-                img2 = cv2.resize(img2, (target_width, target_height))
+        try:
+            # تنظیم اندازه ثابت
+            target_height = 600
+            target_width = 800
+            img1 = cv2.resize(img1, (target_width, target_height))
+            img2 = cv2.resize(img2, (target_width, target_height))
 
-                # تشخیص ویژگی‌ها با SIFT
-                sift = cv2.SIFT_create(nfeatures=5000)
-                kp1, des1 = sift.detectAndCompute(img1, None)
-                kp2, des2 = sift.detectAndCompute(img2, None)
-
-                # تطبیق ویژگی‌ها
-                bf = cv2.BFMatcher()
-                matches = bf.knnMatch(des1, des2, k=2)
-
-                # انتخاب بهترین تطبیق‌ها
-                good_matches = []
-                for m, n in matches:
-                    if m.distance < 0.7 * n.distance:
-                        good_matches.append(m)
-
-                # محاسبه ماتریس انتقال
-                src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-                dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+            # ایجاد Stitcher
+            stitcher = cv2.Stitcher.create(cv2.Stitcher_PANORAMA)
+            
+            # ترکیب تصاویر
+            status, panorama = stitcher.stitch([img1, img2])
+            
+            if status == cv2.Stitcher_OK:
+                # برش حاشیه‌های سیاه
+                gray = cv2.cvtColor(panorama, cv2.COLOR_BGR2GRAY)
+                _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
+                contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 
-                # استفاده از RANSAC با پارامترهای بهینه
-                H, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
-
-                # ایجاد تصویر نهایی با Blending
-                result_width = target_width * 2
-                result = np.zeros((target_height, result_width, 3), dtype=np.uint8)
+                if contours:
+                    x, y, w, h = cv2.boundingRect(contours[0])
+                    panorama = panorama[y:y+h, x:x+w]
                 
-                # وارپ تصویر دوم
-                warped = cv2.warpPerspective(img2, H, (result_width, target_height))
-                
-                # ترکیب تصاویر با Blending
-                left = result_width // 4
-                right = 3 * result_width // 4
-                
-                # کپی تصویر اول
-                result[:, :target_width] = img1
-                
-                # ایجاد ماسک برای Blending
-                mask = np.zeros((target_height, result_width), dtype=np.float32)
-                mask[:, left:right] = np.tile(np.linspace(0, 1, right-left), (target_height, 1))
-                mask[:, right:] = 1
-                
-                # اعمال Blending
-                for i in range(3):
-                    result[:, :, i] = (1-mask) * result[:, :, i] + mask * warped[:, :, i]
+                return panorama
+            else:
+                raise ValueError("نتوانست تصاویر را ترکیب کند")
 
-                return result
-
-            except Exception as e:
-                raise ValueError(f"خطا در ایجاد پانوراما: {str(e)}")
-
-
-
-
+        except Exception as e:
+            raise ValueError(f"خطا در ایجاد پانوراما: {str(e)}")
 
 
 
