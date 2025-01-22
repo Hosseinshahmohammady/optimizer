@@ -185,67 +185,59 @@ class OptimizeImageView(APIView):
 
     def create_panorama(self, img1, img2):
         try:
-            # تبدیل تصاویر به مقیاس خاکستری
+            # Resize images to similar dimensions for better matching
+            h1, w1 = img1.shape[:2]
+            h2, w2 = img2.shape[:2]
+            target_height = min(h1, h2)
+            img1 = cv2.resize(img1, (int(w1 * target_height / h1), target_height))
+            img2 = cv2.resize(img2, (int(w2 * target_height / h2), target_height))
+            
+            # Convert to grayscale
             gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
             gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-            # استفاده از SIFT
-            sift = cv2.SIFT_create()
+            # Create SIFT detector with increased features
+            sift = cv2.SIFT_create(nfeatures=5000)
             kp1, des1 = sift.detectAndCompute(gray1, None)
             kp2, des2 = sift.detectAndCompute(gray2, None)
 
-            # استفاده از FLANN برای تطبیق سریع‌تر
+            # FLANN matcher
             FLANN_INDEX_KDTREE = 1
             index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
             search_params = dict(checks=50)
             flann = cv2.FlannBasedMatcher(index_params, search_params)
             
+            # Find matches with k=2 for Lowe's ratio test
             matches = flann.knnMatch(des1, des2, k=2)
 
-            # اعمال تست نسبت Lowe برای فیلتر کردن matches خوب
+            # Apply Lowe's ratio test with relaxed threshold
             good_matches = []
             for m, n in matches:
-                if m.distance < 0.7 * n.distance:
+                if m.distance < 0.8 * n.distance:  # Increased threshold
                     good_matches.append(m)
 
-            # محاسبه ماتریس همگرافی
+            if len(good_matches) < 4:
+                raise ValueError("Not enough matching points found between images")
+
+            # Get corresponding points
             src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
             dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-            
-            H, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
 
-            # محاسبه ابعاد تصویر نهایی
-            h1, w1 = img1.shape[:2]
-            h2, w2 = img2.shape[:2]
-            
-            pts1 = np.float32([[0, 0], [0, h1], [w1, h1], [w1, 0]]).reshape(-1, 1, 2)
-            pts2 = np.float32([[0, 0], [0, h2], [w2, h2], [w2, 0]]).reshape(-1, 1, 2)
-            pts2_ = cv2.perspectiveTransform(pts2, H)
-            pts = np.concatenate((pts1, pts2_), axis=0)
-            
-            [xmin, ymin] = np.int32(pts.min(axis=0).ravel() - 0.5)
-            [xmax, ymax] = np.int32(pts.max(axis=0).ravel() + 0.5)
-            
-            t = [-xmin, -ymin]
-            Ht = np.array([[1, 0, t[0]], [0, 1, t[1]], [0, 0, 1]])
+            # Find homography with more relaxed RANSAC parameters
+            H, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 
+                                    ransacReprojThreshold=5.0,  # Increased threshold
+                                    maxIters=2000,  # More iterations
+                                    confidence=0.995)  # Higher confidence
 
-            # ایجاد تصویر پانوراما
-            result = cv2.warpPerspective(img2, Ht.dot(H), (xmax-xmin, ymax-ymin))
-            result[t[1]:h1+t[1], t[0]:w1+t[0]] = img1
+            # Create panorama with computed dimensions
+            result = cv2.warpPerspective(img2, H, (img1.shape[1] + img2.shape[1], img1.shape[0]))
+            result[0:img1.shape[0], 0:img1.shape[1]] = img1
 
-            # حذف حاشیه‌های اضافی
-            gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-            _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
-            contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            
-            if contours:
-                x, y, w, h = cv2.boundingRect(contours[0])
-                result = result[y:y+h, x:x+w]
-
-                return result
+            return result
 
         except Exception as e:
             raise ValueError(f"Error creating panorama: {str(e)}")
+
 
 
 
