@@ -97,33 +97,7 @@ class OptimizeImageView(APIView):
         request_body=ImageUploadSerializer,
         responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'},
     )
-
-    def validate_images(self, image, image2):
-        if not image and not image2:
-            raise ValidationError('At least one image must be provided')
-        
-        return self.decode_images(image, image2)
-    
-
-def decode_images(self, image, image2):
-        images = {}
-        if image:
-            images['img1'] = self.decode_single_image(image)
-        if image2:
-            images['img2'] = self.decode_single_image(image2)
-        return images
-
-
-def decode_single_image(self, image):
-        file_data = image.read()
-        nparr = np.frombuffer(file_data, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        if img is None:
-            raise ValueError("Image could not be decoded")
-        return img
-
-
-def post(self, request):
+    def post(self, request):
         try:
             serializer = ImageUploadSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -154,6 +128,33 @@ def post(self, request):
             
         except Exception as e:
             return Response({'error': str(e)}, status=400)
+
+    def validate_images(self, image, image2):
+        if not image and not image2:
+            raise ValidationError('At least one image must be provided')
+        
+        return self.decode_images(image, image2)
+    
+
+def decode_images(self, image, image2):
+        images = {}
+        if image:
+            images['img1'] = self.decode_single_image(image)
+        if image2:
+            images['img2'] = self.decode_single_image(image2)
+        return images
+
+
+def decode_single_image(self, image):
+        file_data = image.read()
+        nparr = np.frombuffer(file_data, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is None:
+            raise ValueError("Image could not be decoded")
+        return img
+
+
+
 
 
 
