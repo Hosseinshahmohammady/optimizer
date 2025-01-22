@@ -184,37 +184,61 @@ class OptimizeImageView(APIView):
             raise ValueError(f"Error processing image: {str(e)}")
 
     def create_panorama(self, img1, img2):
-        """Create panorama from two images using feature matching and homography"""
-        try:
+         """Create panorama from two images using feature matching and homography"""
+         try:
+            # Convert images to grayscale
             gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
             gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
             
-            orb = cv2.ORB_create()
+            # Create ORB detector with more features
+            orb = cv2.ORB_create(nfeatures=2000)
+            
+            # Detect keypoints and compute descriptors
             kp1, des1 = orb.detectAndCompute(gray1, None)
             kp2, des2 = orb.detectAndCompute(gray2, None)
             
+            # Create matcher and match features
             bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
             matches = bf.match(des1, des2)
             
-            matches = sorted(matches, key=lambda x: x.distance)
+            # Filter good matches
+            good_matches = []
+            for m in matches:
+                if m.distance < 50:  # Adjust this threshold
+                    good_matches.append(m)
             
-            points1 = np.float32([kp1[m.queryIdx].pt for m in matches])
-            points2 = np.float32([kp2[m.trainIdx].pt for m in matches])
+            if len(good_matches) < 4:
+                raise ValueError("Not enough good matches found")
+                
+            # Get corresponding points
+            points1 = np.float32([kp1[m.queryIdx].pt for m in good_matches])
+            points2 = np.float32([kp2[m.trainIdx].pt for m in good_matches])
             
-            h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+            # Find homography with RANSAC
+            h, mask = cv2.findHomography(points2, points1, cv2.RANSAC, 5.0)
             
-            panorama = cv2.warpPerspective(
-                img2,
-                h,
-                (img1.shape[1] + img2.shape[1], img1.shape[0])
-            )
+            # Calculate output dimensions
+            height = max(img1.shape[0], img2.shape[0])
+            width = img1.shape[1] + img2.shape[1]
             
+            # Create panorama
+            panorama = cv2.warpPerspective(img2, h, (width, height))
             panorama[0:img1.shape[0], 0:img1.shape[1]] = img1
+            
+            # Crop black borders
+            gray = cv2.cvtColor(panorama, cv2.COLOR_BGR2GRAY)
+            _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
+            contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+            if contours:
+                x, y, w, h = cv2.boundingRect(contours[0])
+                panorama = panorama[y:y+h, x:x+w]
             
             return panorama
 
-        except Exception as e:
-            raise ValueError(f"Error creating panorama: {str(e)}")
+         except Exception as e:
+             raise ValueError(f"Error creating panorama: {str(e)}")
+
 
     def encode_image(self, img, format_choice, quality):
         """Encode processed image to bytes"""
