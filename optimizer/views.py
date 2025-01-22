@@ -184,49 +184,63 @@ class OptimizeImageView(APIView):
             raise ValueError(f"Error processing image: {str(e)}")
 
     def create_panorama(self, img1, img2):
-        try:
-            # Set fixed dimensions for both images
-            target_width = 800
-            target_height = 600
-            
-            # Resize both images to the same dimensions
-            img1 = cv2.resize(img1, (target_width, target_height))
-            img2 = cv2.resize(img2, (target_width, target_height))
+            try:
+                # تنظیم اندازه یکسان
+                target_height = 600
+                target_width = 800
+                img1 = cv2.resize(img1, (target_width, target_height))
+                img2 = cv2.resize(img2, (target_width, target_height))
 
-            # Feature detection and matching
-            sift = cv2.SIFT_create(nfeatures=3000)
-            kp1, des1 = sift.detectAndCompute(img1, None)
-            kp2, des2 = sift.detectAndCompute(img2, None)
+                # تشخیص ویژگی‌ها با SIFT
+                sift = cv2.SIFT_create(nfeatures=5000)
+                kp1, des1 = sift.detectAndCompute(img1, None)
+                kp2, des2 = sift.detectAndCompute(img2, None)
 
-            # FLANN matching
-            index_params = dict(algorithm=1, trees=5)
-            search_params = dict(checks=100)
-            flann = cv2.FlannBasedMatcher(index_params, search_params)
-            matches = flann.knnMatch(des1, des2, k=2)
+                # تطبیق ویژگی‌ها
+                bf = cv2.BFMatcher()
+                matches = bf.knnMatch(des1, des2, k=2)
 
-            # Filter good matches
-            good_matches = []
-            for m, n in matches:
-                if m.distance < 0.75 * n.distance:
-                    good_matches.append(m)
+                # انتخاب بهترین تطبیق‌ها
+                good_matches = []
+                for m, n in matches:
+                    if m.distance < 0.7 * n.distance:
+                        good_matches.append(m)
 
-            if len(good_matches) >= 4:
+                # محاسبه ماتریس انتقال
                 src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
                 dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
                 
-                H, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 3.0)
-                
-                # Create panorama with fixed dimensions
-                result_width = target_width * 2  # Double width for panorama
-                result = cv2.warpPerspective(img2, H, (result_width, target_height))
-                result[0:target_height, 0:target_width] = img1
-                
-                return result
-            else:
-                raise ValueError("Not enough matching points")
+                # استفاده از RANSAC با پارامترهای بهینه
+                H, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
 
-        except Exception as e:
-            raise ValueError(f"Panorama creation error: {str(e)}")
+                # ایجاد تصویر نهایی با Blending
+                result_width = target_width * 2
+                result = np.zeros((target_height, result_width, 3), dtype=np.uint8)
+                
+                # وارپ تصویر دوم
+                warped = cv2.warpPerspective(img2, H, (result_width, target_height))
+                
+                # ترکیب تصاویر با Blending
+                left = result_width // 4
+                right = 3 * result_width // 4
+                
+                # کپی تصویر اول
+                result[:, :target_width] = img1
+                
+                # ایجاد ماسک برای Blending
+                mask = np.zeros((target_height, result_width), dtype=np.float32)
+                mask[:, left:right] = np.tile(np.linspace(0, 1, right-left), (target_height, 1))
+                mask[:, right:] = 1
+                
+                # اعمال Blending
+                for i in range(3):
+                    result[:, :, i] = (1-mask) * result[:, :, i] + mask * warped[:, :, i]
+
+                return result
+
+            except Exception as e:
+                raise ValueError(f"خطا در ایجاد پانوراما: {str(e)}")
+
 
 
 
