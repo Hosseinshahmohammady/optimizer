@@ -185,34 +185,72 @@ class OptimizeImageView(APIView):
 
     def create_panorama(self, img1, img2):
         try:
-            # تنظیم اندازه ثابت
-            target_height = 600
-            target_width = 800
+            # تنظیم اندازه یکسان
+            target_height = 800
+            ratio = target_height / img1.shape[0]
+            target_width = int(img1.shape[1] * ratio)
+            
             img1 = cv2.resize(img1, (target_width, target_height))
             img2 = cv2.resize(img2, (target_width, target_height))
 
-            # ایجاد Stitcher
-            stitcher = cv2.Stitcher.create(cv2.Stitcher_PANORAMA)
+            # تشخیص و توصیف ویژگی‌ها با AKAZE
+            akaze = cv2.AKAZE_create()
+            kp1, des1 = akaze.detectAndCompute(img1, None)
+            kp2, des2 = akaze.detectAndCompute(img2, None)
+
+            # تطبیق ویژگی‌ها
+            bf = cv2.BFMatcher(cv2.NORM_HAMMING)
+            matches = bf.knnMatch(des1, des2, k=2)
+
+            # فیلتر کردن بهترین تطبیق‌ها
+            good_matches = []
+            for m, n in matches:
+                if m.distance < 0.8 * n.distance:
+                    good_matches.append(m)
+
+            if len(good_matches) < 4:
+                return np.hstack([img1, img2])  # اگر نقاط کافی پیدا نشد، تصاویر را کنار هم قرار بده
+
+            # محاسبه ماتریس همگرافی
+            src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+            dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
             
-            # ترکیب تصاویر
-            status, panorama = stitcher.stitch([img1, img2])
+            H, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+
+            # محاسبه ابعاد تصویر نهایی
+            h1, w1 = img1.shape[:2]
+            h2, w2 = img2.shape[:2]
             
-            if status == cv2.Stitcher_OK:
-                # برش حاشیه‌های سیاه
-                gray = cv2.cvtColor(panorama, cv2.COLOR_BGR2GRAY)
-                _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
-                contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                
-                if contours:
-                    x, y, w, h = cv2.boundingRect(contours[0])
-                    panorama = panorama[y:y+h, x:x+w]
-                
-                return panorama
-            else:
-                raise ValueError("نتوانست تصاویر را ترکیب کند")
+            pts1 = np.float32([[0, 0], [0, h1], [w1, h1], [w1, 0]]).reshape(-1, 1, 2)
+            pts2 = np.float32([[0, 0], [0, h2], [w2, h2], [w2, 0]]).reshape(-1, 1, 2)
+            pts2_ = cv2.perspectiveTransform(pts2, H)
+            pts = np.concatenate((pts1, pts2_), axis=0)
+            
+            [xmin, ymin] = np.int32(pts.min(axis=0).ravel())
+            [xmax, ymax] = np.int32(pts.max(axis=0).ravel())
+            
+            t = [-xmin, -ymin]
+            Ht = np.array([[1, 0, t[0]], [0, 1, t[1]], [0, 0, 1]])
+
+            # ایجاد تصویر نهایی
+            panorama = cv2.warpPerspective(img2, Ht.dot(H), (xmax-xmin, ymax-ymin))
+            panorama[t[1]:h1+t[1], t[0]:w1+t[0]] = img1
+
+            # برش حاشیه‌های سیاه
+            gray = cv2.cvtColor(panorama, cv2.COLOR_BGR2GRAY)
+            _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
+            contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+            if contours:
+                x, y, w, h = cv2.boundingRect(contours[0])
+                panorama = panorama[y:y+h, x:x+w]
+
+            return panorama
 
         except Exception as e:
-            raise ValueError(f"خطا در ایجاد پانوراما: {str(e)}")
+            # اگر خطایی رخ داد، تصاویر را ساده کنار هم قرار بده
+            return np.hstack([img1, img2])
+
 
 
 
