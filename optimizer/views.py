@@ -157,13 +157,27 @@ def validate_images(self, image, image2):
         return self.decode_images(image, image2)
     
 
-def decode_images(self, image, image2):
-        images = {}
-        if image:
-            images['img1'] = self.decode_single_image(image)
-        if image2:
-            images['img2'] = self.decode_single_image(image2)
-        return images
+def encode_image(self, img, format_choice, quality):
+    """Encode processed image to bytes"""
+    try:
+        if format_choice == 'jpeg':
+            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+            result, img_encoded = cv2.imencode('.jpg', img, encode_param)
+        elif format_choice == 'png':
+            result, img_encoded = cv2.imencode('.png', img)
+        elif format_choice == 'webp':
+            result, img_encoded = cv2.imencode('.webp', img)
+        else:
+            raise ValueError(f"Unsupported format: {format_choice}")
+
+        if not result:
+            raise ValueError("Failed to encode image")
+
+        return img_encoded
+
+    except Exception as e:
+        raise ValueError(f"Error encoding image: {str(e)}")
+
 
 
 def decode_single_image(self, image):
@@ -173,6 +187,13 @@ def decode_single_image(self, image):
         if img is None:
             raise ValueError("Image could not be decoded")
         return img
+
+
+def generate_unique_id(self):
+    """Generate unique ID for saved images"""
+    media_path = settings.MEDIA_ROOT
+    existing_files = os.listdir(media_path)
+    return len(existing_files) + 1
 
 
 
