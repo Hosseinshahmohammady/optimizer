@@ -93,107 +93,81 @@ class OptimizeImageView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes=([MultiPartParser])
 
+    def validate_images(self, image, image2):
+        """Validate and decode uploaded images"""
+        if not image and not image2:
+            raise ValidationError('At least one image must be provided')
+        
+        images = {}
+        if image:
+            images['img1'] = self.decode_single_image(image)
+        if image2:
+            images['img2'] = self.decode_single_image(image2)
+        return images
+
+    def decode_single_image(self, image):
+        """Decode a single image file to OpenCV format"""
+        file_data = image.read()
+        nparr = np.frombuffer(file_data, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is None:
+            raise ValidationError("Image could not be decoded")
+        return img
+
     @swagger_auto_schema(
         request_body=ImageUploadSerializer,
         responses={200: 'Image optimized successfully', 400: 'Invalid image or quality'},
     )
     def post(self, request):
-     try:
-        serializer = ImageUploadSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        # انتقال پارامترها به کلاس
-        self.grayscale = serializer.validated_data.get('grayscale', False)
-        self.denoise = serializer.validated_data.get('denoise', False)
-        self.edge_detection = serializer.validated_data.get('edge_detection', False)
-        self.cropping = serializer.validated_data.get('cropping')
-        self.rotation_angle = serializer.validated_data.get('rotation', 0)
-        self.width = serializer.validated_data.get('width')
-        self.height = serializer.validated_data.get('height')
-        self.gaussian_blur = serializer.validated_data.get('gaussian_blur')
-        self.contrast = serializer.validated_data.get('contrast', 0)
-        self.brightness = serializer.validated_data.get('brightness', 0)
-        self.histogram_equalization = serializer.validated_data.get('histogram_equalization', False)
-        self.corner_detection = serializer.validated_data.get('corner_detection', False)
-        self.translate_x = serializer.validated_data.get('translate_x', 0)
-        self.translate_y = serializer.validated_data.get('translate_y', 0)
-        self.scale_x = serializer.validated_data.get('scale_x', 1.0)
-        self.scale_y = serializer.validated_data.get('scale_y', 1.0)
+        try:
+            serializer = ImageUploadSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # انتقال پارامترها به کلاس
+            self.grayscale = serializer.validated_data.get('grayscale', False)
+            self.denoise = serializer.validated_data.get('denoise', False)
+            self.edge_detection = serializer.validated_data.get('edge_detection', False)
+            self.cropping = serializer.validated_data.get('cropping')
+            self.rotation_angle = serializer.validated_data.get('rotation', 0)
+            self.width = serializer.validated_data.get('width')
+            self.height = serializer.validated_data.get('height')
+            self.gaussian_blur = serializer.validated_data.get('gaussian_blur')
+            self.contrast = serializer.validated_data.get('contrast', 0)
+            self.brightness = serializer.validated_data.get('brightness', 0)
+            self.histogram_equalization = serializer.validated_data.get('histogram_equalization', False)
+            self.corner_detection = serializer.validated_data.get('corner_detection', False)
+            self.translate_x = serializer.validated_data.get('translate_x', 0)
+            self.translate_y = serializer.validated_data.get('translate_y', 0)
+            self.scale_x = serializer.validated_data.get('scale_x', 1.0)
+            self.scale_y = serializer.validated_data.get('scale_y', 1.0)
 
-        images = self.validate_images(
-            serializer.validated_data.get('image'),
-            serializer.validated_data.get('image2')
-        )
+            images = self.validate_images(
+                serializer.validated_data.get('image'),
+                serializer.validated_data.get('image2')
+            )
 
-        processed_img = self.process_image(images.get('img1'))
-        
-        # ادامه کد...
+            processed_img = self.process_image(images.get('img1'))
 
+            if serializer.validated_data.get('panorama_image') and 'img2' in images:
+                processed_img = self.create_panorama(processed_img, images['img2'])
 
-        if serializer.validated_data.get('panorama_image') and 'img2' in images:
-                processed_img = create_panorama(processed_img, images['img2'])
-
-        encoded_img = self.encode_image(
-                processed_img, 
+            encoded_img = self.encode_image(
+                processed_img,
                 serializer.validated_data['format_choice'],
                 serializer.validated_data['quality']
             )
 
-        pk, image_url = self.save_image(encoded_img, serializer.validated_data['format_choice'])
+            pk, image_url = self.save_image(encoded_img, serializer.validated_data['format_choice'])
             
-        return Response({
+            return Response({
                 'message': 'Image optimized and saved',
                 'image_url': image_url,
                 'image_id': f'Enter your browser : http://172.105.38.184:8000/api/pk/'
             })
-            
-     except Exception as e:
+
+        except Exception as e:
             return Response({'error': str(e)}, status=400)
 
-def validate_images(self, image, image2):
-        if not image and not image2:
-            raise ValidationError('At least one image must be provided')
-        
-        return self.decode_images(image, image2)
-    
-
-def encode_image(self, img, format_choice, quality):
-    """Encode processed image to bytes"""
-    try:
-        if format_choice == 'jpeg':
-            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-            result, img_encoded = cv2.imencode('.jpg', img, encode_param)
-        elif format_choice == 'png':
-            result, img_encoded = cv2.imencode('.png', img)
-        elif format_choice == 'webp':
-            result, img_encoded = cv2.imencode('.webp', img)
-        else:
-            raise ValueError(f"Unsupported format: {format_choice}")
-
-        if not result:
-            raise ValueError("Failed to encode image")
-
-        return img_encoded
-
-    except Exception as e:
-        raise ValueError(f"Error encoding image: {str(e)}")
-
-
-
-def decode_single_image(self, image):
-        file_data = image.read()
-        nparr = np.frombuffer(file_data, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        if img is None:
-            raise ValueError("Image could not be decoded")
-        return img
-
-
-def generate_unique_id(self):
-    """Generate unique ID for saved images"""
-    media_path = settings.MEDIA_ROOT
-    existing_files = os.listdir(media_path)
-    return len(existing_files) + 1
 
 
 
