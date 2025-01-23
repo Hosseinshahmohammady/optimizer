@@ -178,10 +178,53 @@ class OptimizeImageView(APIView):
             if self.scale_x != 1.0 or self.scale_y != 1.0:
                 img = cv2.resize(img, None, fx=self.scale_x, fy=self.scale_y, interpolation=cv2.INTER_LINEAR)
 
+            if self.Identify_features:
+                img = self.identify_features(img, self.img2)
+
+            if self.aligned_image:
+                img = self.align_images(img, self.img2) 
+                
+            if self.combine_images:
+                img = self.combine_images(img, self.img2)
+
+
             return img
 
         except Exception as e:
             raise ValueError(f"Error processing image: {str(e)}")
+
+    def identify_features(self, img1, img2):
+        gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+        gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+        sift = cv2.SIFT_create()
+        keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
+        keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
+        bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+        matches = bf.match(descriptors1, descriptors2)
+        matches = sorted(matches, key=lambda x:x.distance)
+        return cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, 
+                            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+
+    def align_images(self, img1, img2):
+        sift = cv2.SIFT_create()
+        kp1, des1 = sift.detectAndCompute(img1, None)
+        kp2, des2 = sift.detectAndCompute(img2, None)
+        bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+        matches = bf.match(des1, des2)
+        matches = sorted(matches, key=lambda x:x.distance)
+        src_pts = np.float32([kp1[m.queryIdx].pt for m in matches]).reshape(-1,1,2)
+        dst_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1,1,2)
+        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        h, w = img1.shape[:2] if len(img1.shape) == 2 else img1.shape[:2]
+        return cv2.warpPerspective(img1, M, (w, h))
+
+    def combine_images(self, img1, img2):
+        mask = np.zeros_like(img1, dtype=np.uint8)
+        cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
+        img1_masked = cv2.bitwise_and(img1, mask)
+        img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
+        return cv2.add(img1_masked, img2_masked)
+
 
     def create_panorama(self, img1, img2):
         try:
@@ -344,28 +387,6 @@ class OptimizeImageView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=400)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
