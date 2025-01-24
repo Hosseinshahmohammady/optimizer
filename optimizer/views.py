@@ -80,15 +80,6 @@ class ObtainJWTTokenView(APIView):
 
 
 
-
-
-
-
-
-
-
-
-
 class OptimizeImageView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = ([MultiPartParser])
@@ -179,13 +170,14 @@ class OptimizeImageView(APIView):
                 img = cv2.resize(img, None, fx=self.scale_x, fy=self.scale_y, interpolation=cv2.INTER_LINEAR)
 
             if self.Identify_features:
-                 img = self.identify_features(img, self.img2)
+                img = self.identify_features(img, self.img2)
 
             if self.aligned_image:
                 img = self.align_images(img, self.img2) 
-                
+            
             if self.combine_images:
                 img = self.combine_images(img, self.img2)
+
 
 
             return img
@@ -347,6 +339,11 @@ class OptimizeImageView(APIView):
             self.translate_y = serializer.validated_data.get('translate_y', 0)
             self.scale_x = serializer.validated_data.get('scale_x', 1.0)
             self.scale_y = serializer.validated_data.get('scale_y', 1.0)
+            self.aligned_image = serializer.validated_data.get('aligned_image', False)
+            self.panorama_image = serializer.validated_data.get('panorama_image', False)
+            self.combine_images = serializer.validated_data.get('combine_images', False)
+            self.identify_features = serializer.validated_data.get('identify_features', False)
+            self.img2 = None
 
             images = self.validate_images(
                 serializer.validated_data.get('image'),
