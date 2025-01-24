@@ -179,7 +179,7 @@ class OptimizeImageView(APIView):
                 img = cv2.resize(img, None, fx=self.scale_x, fy=self.scale_y, interpolation=cv2.INTER_LINEAR)
 
             if self.Identify_features:
-                img = self.identify_features(img, self.img2)
+                 img = self.identify_features(img, self.img2)
 
             if self.aligned_image:
                 img = self.align_images(img, self.img2) 
