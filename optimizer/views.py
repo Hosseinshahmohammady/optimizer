@@ -169,16 +169,14 @@ class OptimizeImageView(APIView):
             if self.scale_x != 1.0 or self.scale_y != 1.0:
                 img = cv2.resize(img, None, fx=self.scale_x, fy=self.scale_y, interpolation=cv2.INTER_LINEAR)
 
-            if self.Identify_features:
+            if self.identify_features and self.img2 is not None:
                 img = self.identify_features(img, self.img2)
 
-            if self.aligned_image:
-                img = self.align_images(img, self.img2) 
+            if self.aligned_image and self.img2 is not None:
+                img = self.align_images(img, self.img2)
             
-            if self.combine_images:
+            if self.combine_images and self.img2 is not None:
                 img = self.combine_images(img, self.img2)
-
-
 
             return img
 
@@ -272,10 +270,6 @@ class OptimizeImageView(APIView):
             return np.hstack([img1, img2])
 
 
-
-
-
-
     def encode_image(self, img, format_choice, quality):
         """Encode processed image to bytes"""
         try:
@@ -350,10 +344,12 @@ class OptimizeImageView(APIView):
                 serializer.validated_data.get('image2')
             )
 
-            processed_img = self.process_image(images.get('img1'))
-
+            processed_img = images.get('img1')
+        
             if serializer.validated_data.get('panorama_image') and 'img2' in images:
                 processed_img = self.create_panorama(processed_img, images['img2'])
+            
+            processed_img = self.process_image(processed_img)
 
             encoded_img = self.encode_image(
                 processed_img,
