@@ -227,39 +227,58 @@ class OptimizeImageView(APIView):
 
 
     def create_panorama(self, img1, img2):
-        # تنظیم اندازه یکسان برای تصاویر
-        target_height = 800
-        ratio = target_height / img1.shape[0]
-        target_width = int(img1.shape[1] * ratio)
-        
-        img1 = cv2.resize(img1, (target_width, target_height))
-        img2 = cv2.resize(img2, (target_width, target_height))
+        try:
+            # تنظیم اندازه یکسان
+            height = min(img1.shape[0], img2.shape[0])
+            width = min(img1.shape[1], img2.shape[1])
+            img1 = cv2.resize(img1, (width, height))
+            img2 = cv2.resize(img2, (width, height))
 
-        # تشخیص و تطبیق ویژگی‌ها با AKAZE
-        akaze = cv2.AKAZE_create()
-        kp1, des1 = akaze.detectAndCompute(img1, None)
-        kp2, des2 = akaze.detectAndCompute(img2, None)
+            # تشخیص و توصیف ویژگی‌ها با SIFT
+            sift = cv2.SIFT_create()
+            kp1, des1 = sift.detectAndCompute(img1, None)
+            kp2, des2 = sift.detectAndCompute(img2, None)
 
-        # تطبیق ویژگی‌ها
-        bf = cv2.BFMatcher(cv2.NORM_HAMMING)
-        matches = bf.knnMatch(des1, des2, k=2)
+            # تطبیق ویژگی‌ها با FLANN
+            FLANN_INDEX_KDTREE = 1
+            index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+            search_params = dict(checks=50)
+            flann = cv2.FlannBasedMatcher(index_params, search_params)
+            matches = flann.knnMatch(des1, des2, k=2)
 
-        # انتخاب بهترین تطبیق‌ها
-        good_matches = []
-        for m, n in matches:
-            if m.distance < 0.8 * n.distance:
-                good_matches.append(m)
+            # فیلتر کردن تطبیق‌های خوب
+            good_matches = []
+            for m, n in matches:
+                if m.distance < 0.7 * n.distance:
+                    good_matches.append(m)
 
-        # محاسبه ماتریس همگرافی
-        src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-        dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-        H, _ = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+            # محاسبه ماتریس همگرافی
+            if len(good_matches) > 10:
+                src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+                dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+                H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
 
-        # ایجاد تصویر پانوراما
-        result = cv2.warpPerspective(img2, H, (img1.shape[1] + img2.shape[1], img1.shape[0]))
-        result[0:img1.shape[0], 0:img1.shape[1]] = img1
+                # ایجاد تصویر پانوراما
+                result_width = img1.shape[1] + img2.shape[1]
+                result = cv2.warpPerspective(img1, H, (result_width, height))
+                result[0:img2.shape[0], 0:img2.shape[1]] = img2
 
-        return result
+                # برش حاشیه‌های اضافی
+                gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+                _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
+                contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                
+                if contours:
+                    x, y, w, h = cv2.boundingRect(contours[0])
+                    result = result[y:y+h, x:x+w]
+
+                return result
+            else:
+                return np.hstack([img1, img2])
+
+        except Exception as e:
+            return np.hstack([img1, img2])
+
 
 
 
