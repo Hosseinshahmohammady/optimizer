@@ -190,76 +190,92 @@ class OptimizeImageView(APIView):
         keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
         bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
         matches = bf.match(descriptors1, descriptors2)
-        matches = sorted(matches, key=lambda x:x.distance)
-        return cv2.drawMatches(gray1, keypoints1, gray2, keypoints2, matches[:20], None, 
-                            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        matches = sorted(matches, key=lambda x:x.distance)[:50]  
+        result = cv2.drawMatches(img1, keypoints1, img2, keypoints2, matches, None, 
+                                flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        return result
+
 
     def align_images(self, img1, img2):
+        height = min(img1.shape[0], img2.shape[0])
+        width = min(img1.shape[1], img2.shape[1])
+        img1 = cv2.resize(img1, (width, height))
+        img2 = cv2.resize(img2, (width, height))
+        
         sift = cv2.SIFT_create()
         kp1, des1 = sift.detectAndCompute(img1, None)
         kp2, des2 = sift.detectAndCompute(img2, None)
+        
+        if des1 is None or des2 is None:
+            return img1
+            
         bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
         matches = bf.match(des1, des2)
-        matches = sorted(matches, key=lambda x:x.distance)
+        matches = sorted(matches, key=lambda x:x.distance)[:50]
+        
+        if len(matches) < 4:
+            return img1
+            
         src_pts = np.float32([kp1[m.queryIdx].pt for m in matches]).reshape(-1,1,2)
         dst_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1,1,2)
         M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-        h, w = img1.shape[:2] if len(img1.shape) == 2 else img1.shape[:2]
-        return cv2.warpPerspective(img1, M, (w, h))
+        
+        if M is None:
+            return img1
+            
+        return cv2.warpPerspective(img1, M, (width, height))
+
 
     def combine_images(self, img1, img2):
+        height = min(img1.shape[0], img2.shape[0])
+        width = min(img1.shape[1], img2.shape[1])
+        img1 = cv2.resize(img1, (width, height))
+        img2 = cv2.resize(img2, (width, height))
+        
         mask = np.zeros_like(img1, dtype=np.uint8)
-        cv2.circle(mask, (250, 250), 100, (255, 255, 255), -1)
+        center = (width // 2, height // 2)
+        radius = min(width, height) // 4
+        cv2.circle(mask, center, radius, (255, 255, 255), -1)
+        
         img1_masked = cv2.bitwise_and(img1, mask)
         img2_masked = cv2.bitwise_and(img2, cv2.bitwise_not(mask))
+        
         return cv2.add(img1_masked, img2_masked)
 
 
     def create_panorama(self, img1, img2):
-        try:
-            height = min(img1.shape[0], img2.shape[0])
-            width = min(img1.shape[1], img2.shape[1])
-            img1 = cv2.resize(img1, (width, height))
-            img2 = cv2.resize(img2, (width, height))
-
-            sift = cv2.SIFT_create()
-            kp1, des1 = sift.detectAndCompute(img1, None)
-            kp2, des2 = sift.detectAndCompute(img2, None)
-
-            FLANN_INDEX_KDTREE = 1
-            index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-            search_params = dict(checks=50)
-            flann = cv2.FlannBasedMatcher(index_params, search_params)
-            matches = flann.knnMatch(des1, des2, k=2)
-
-            good_matches = []
-            for m, n in matches:
-                if m.distance < 0.7 * n.distance:
-                    good_matches.append(m)
-
-            if len(good_matches) > 10:
-                src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-                dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-                H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-
-                result_width = img1.shape[1] + img2.shape[1]
-                result = cv2.warpPerspective(img1, H, (result_width, height))
-                result[0:img2.shape[0], 0:img2.shape[1]] = img2
-
-                gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-                _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
-                contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                
-                if contours:
-                    x, y, w, h = cv2.boundingRect(contours[0])
-                    result = result[y:y+h, x:x+w]
-
-                return result
-            else:
-                return np.hstack([img1, img2])
-
-        except Exception as e:
+        height = min(img1.shape[0], img2.shape[0])
+        width = min(img1.shape[1], img2.shape[1])
+        img1 = cv2.resize(img1, (width, height))
+        img2 = cv2.resize(img2, (width, height))
+        
+        sift = cv2.SIFT_create()
+        kp1, des1 = sift.detectAndCompute(img1, None)
+        kp2, des2 = sift.detectAndCompute(img2, None)
+        
+        if des1 is None or des2 is None:
             return np.hstack([img1, img2])
+        
+        bf = cv2.BFMatcher()
+        matches = bf.knnMatch(des1, des2, k=2)
+        
+        good_matches = []
+        for m, n in matches:
+            if m.distance < 0.7 * n.distance:
+                good_matches.append(m)
+        
+        if len(good_matches) > 10:
+            src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+            dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+            H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+            
+            result = cv2.warpPerspective(img1, H, (width * 2, height))
+            result[0:height, 0:width] = img2
+            
+            return result
+            
+        return np.hstack([img1, img2])
+
 
 
     def encode_image(self, img, format_choice, quality):
