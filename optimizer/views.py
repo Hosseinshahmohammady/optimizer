@@ -191,7 +191,10 @@ class OptimizeImageView(APIView):
 
                 
             if self.ransac_line_detection:
-                img = self.ransac_line_detection(img)
+                logger.info("Applying Kalman line detection")
+                img = self.ransac_line_detection_function(img)
+                logger.info("Kalman line detection completed")
+
 
             if self.curve_detection:
                 img = self.curve_detection(img)
@@ -205,10 +208,8 @@ class OptimizeImageView(APIView):
             raise ValueError(f"Error processing image: {str(e)}")
         
     def kalman_line_detection_function(self, img):
-        # کپی از تصویر اصلی
         result = img.copy()
         
-        # تبدیل به grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(gray, (5, 5), 0)
         edges = cv2.Canny(blur, 50, 150)
@@ -229,7 +230,6 @@ class OptimizeImageView(APIView):
                 measurement = np.array([[x1], [y1]], np.float32)
                 kalman.correct(measurement)
                 
-                # رسم خط پیش‌بینی شده
                 pred_x = int(prediction[0])
                 pred_y = int(prediction[1])
                 cv2.line(result, (x1, y1), (pred_x, pred_y), (0, 255, 0), 2)
@@ -238,7 +238,7 @@ class OptimizeImageView(APIView):
         return result
 
 
-    def ransac_line_detection(self, points, iterations=100, threshold=3):
+    def ransac_line_detection_function(self, points, iterations=100, threshold=3):
         best_line = None
         best_inliers = []   
         for _ in range(iterations):
@@ -494,7 +494,10 @@ class OptimizeImageView(APIView):
             self.min_line_length = serializer.validated_data['min_line_length']
             self.max_line_gap = serializer.validated_data['max_line_gap']
 
-            self.ransac_line_detection = serializer.validated_data.get('ransac_line_detections', False)
+            self.ransac_line_detection = serializer.validated_data.get['ransac_line_detections']
+            self.ransac_iterations = serializer.validated_data.get['ransac_iterations']
+            self.ransac_threshold = serializer.validated_data.get['ransac_threshold']
+
             self.curve_detection = serializer.validated_data.get('curve_detections', False)
             self.optimize_parameters = serializer.validated_data.get('optimize_parameters', False)
             self.img2 = None

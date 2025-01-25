@@ -57,7 +57,7 @@ class ImageUploadSerializer(serializers.Serializer):
     max_line_gap = serializers.IntegerField(default=10, min_value=1, required=False)
     
     # پارامترهای RANSAC
-    ransac_detection = serializers.BooleanField(default=False)
+    ransac_detection = serializers.BooleanField(default=False, required=False)
     ransac_iterations = serializers.IntegerField(default=100, min_value=10, required=False)
     ransac_threshold = serializers.FloatField(default=3.0, min_value=0.1, required=False)
     
