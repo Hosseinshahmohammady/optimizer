@@ -494,9 +494,9 @@ class OptimizeImageView(APIView):
             self.min_line_length = serializer.validated_data['min_line_length']
             self.max_line_gap = serializer.validated_data['max_line_gap']
 
-            self.ransac_line_detection = serializer.validated_data.get['ransac_line_detections']
-            self.ransac_iterations = serializer.validated_data.get['ransac_iterations']
-            self.ransac_threshold = serializer.validated_data.get['ransac_threshold']
+            self.ransac_line_detection = serializer.validated_data.get('ransac_line_detections')
+            self.ransac_iterations = serializer.validated_data.get('ransac_iterations')
+            self.ransac_threshold = serializer.validated_data.get('ransac_threshold')
 
             self.curve_detection = serializer.validated_data.get('curve_detections', False)
             self.optimize_parameters = serializer.validated_data.get('optimize_parameters', False)
