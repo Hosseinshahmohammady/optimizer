@@ -57,10 +57,11 @@ class ImageUploadSerializer(serializers.Serializer):
     max_line_gap = serializers.IntegerField(default=10, min_value=1, required=False)
     
     # پارامترهای RANSAC
-    ransac_detection = serializers.BooleanField(default=False, required=False)
-    ransac_iterations = serializers.IntegerField(default=100, min_value=10, required=False)
-    ransac_threshold = serializers.FloatField(default=3.0, min_value=0.1, required=False)
-    
+    ransac_detection = serializers.BooleanField(default=False)
+    ransac_iterations = serializers.IntegerField(min_value=10, default=100)
+    ransac_threshold = serializers.FloatField(min_value=0.1, default=3.0)
+    min_inliers = serializers.IntegerField(min_value=2, default=10)
+        
     # پارامترهای تشخیص منحنی
     curve_detection = serializers.BooleanField(default=False)
     gaussian_kernel = serializers.IntegerField(default=5, min_value=3, required=False)

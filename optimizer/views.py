@@ -191,9 +191,9 @@ class OptimizeImageView(APIView):
 
                 
             if self.ransac_line_detection:
-                logger.info("Applying Kalman line detection")
+                logger.info("Applying ransac line detection")
                 img = self.ransac_line_detection_function(img)
-                logger.info("Kalman line detection completed")
+                logger.info("ransac line detection completed")
 
 
             if self.curve_detection:
@@ -238,27 +238,59 @@ class OptimizeImageView(APIView):
         return result
 
 
-    def ransac_line_detection_function(self, points, iterations=100, threshold=3):
+    def ransac_line_detection_function(self, img):
+        # کپی تصویر
+        result = img.copy()
+        
+        # تبدیل به grayscale و پیش‌پردازش
+        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+        blur = cv2.GaussianBlur(gray, (5, 5), 0)
+        edges = cv2.Canny(blur, 50, 150)
+        
+        # یافتن نقاط لبه
+        points = np.column_stack(np.where(edges > 0))
+        
+        if len(points) < 2:
+            return result
+            
         best_line = None
-        best_inliers = []   
-        for _ in range(iterations):
+        best_inliers = []
+        
+        for _ in range(self.ransac_iterations):
             # انتخاب تصادفی دو نقطه
-            sample = points[np.random.choice(points.shape[0], 2, replace=False)]
+            sample_idx = np.random.choice(len(points), 2, replace=False)
+            p1, p2 = points[sample_idx]
             
             # محاسبه پارامترهای خط
-            x1, y1 = sample[0]
-            x2, y2 = sample[1]
+            x1, y1 = p1
+            x2, y2 = p2
             
+            if x2 - x1 == 0:
+                continue
+                
             # محاسبه فاصله نقاط از خط
-            distances = np.abs((y2-y1)*points[:,0] - (x2-x1)*points[:,1] + x2*y1 - y2*x1) / np.sqrt((y2-y1)**2 + (x2-x1)**2)
+            m = (y2 - y1) / (x2 - x1)
+            b = y1 - m * x1
+            distances = np.abs(points[:,1] - (m * points[:,0] + b)) / np.sqrt(1 + m**2)
             
-            # شمارش inliers
-            inliers = points[distances < threshold]
+            # یافتن inliers
+            inliers = points[distances < self.ransac_threshold]
             
             if len(inliers) > len(best_inliers):
                 best_inliers = inliers
-                best_line = (x1,y1,x2,y2)
-            return best_line
+                best_line = (x1, y1, x2, y2)
+        
+        # رسم خط بهترین
+        if best_line and len(best_inliers) >= self.min_inliers:
+            x1, y1, x2, y2 = best_line
+            cv2.line(result, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            
+            # رسم نقاط inlier
+            for point in best_inliers:
+                cv2.circle(result, tuple(point), 2, (0, 0, 255), -1)
+        
+        return result
+
 
 
     def curve_detection(self, img):
@@ -494,9 +526,10 @@ class OptimizeImageView(APIView):
             self.min_line_length = serializer.validated_data['min_line_length']
             self.max_line_gap = serializer.validated_data['max_line_gap']
 
-            self.ransac_line_detection = serializer.validated_data.get('ransac_line_detections')
-            self.ransac_iterations = serializer.validated_data.get('ransac_iterations')
-            self.ransac_threshold = serializer.validated_data.get('ransac_threshold')
+            self.ransac_detection = serializer.validated_data['ransac_detection']
+            self.ransac_iterations = serializer.validated_data['ransac_iterations']
+            self.ransac_threshold = serializer.validated_data['ransac_threshold']
+            self.min_inliers = serializer.validated_data['min_inliers']
 
             self.curve_detection = serializer.validated_data.get('curve_detections', False)
             self.optimize_parameters = serializer.validated_data.get('optimize_parameters', False)
