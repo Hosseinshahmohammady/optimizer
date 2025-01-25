@@ -190,9 +190,9 @@ class OptimizeImageView(APIView):
                 logger.info("Kalman line detection completed")
 
                 
-            if self.ransac_line_detection:
+            if self.ransac_detection:
                 logger.info("Applying ransac line detection")
-                img = self.ransac_line_detection_function(img)
+                img = self.ransac_line_detection(img)
                 logger.info("ransac line detection completed")
 
 
@@ -238,7 +238,7 @@ class OptimizeImageView(APIView):
         return result
 
 
-    def ransac_line_detection_function(self, img):
+    def ransac_line_detection(self, img):
         # کپی تصویر
         result = img.copy()
         
