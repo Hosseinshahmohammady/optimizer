@@ -52,7 +52,7 @@ class ImageUploadSerializer(serializers.Serializer):
     perspective_correction = serializers.BooleanField(required=False, default=False)
 
     # اضافه کردن پارامترهای تشخیص خط کالمن
-    kalman_line_detection = serializers.BooleanField(default=False)
+    kalman_line_detection = serializers.BooleanField(default=False, required=False)
     min_line_length = serializers.IntegerField(default=100, min_value=10, required=False)
     max_line_gap = serializers.IntegerField(default=10, min_value=1, required=False)
     
