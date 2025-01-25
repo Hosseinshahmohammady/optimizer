@@ -85,7 +85,6 @@ class OptimizeImageView(APIView):
     parser_classes = ([MultiPartParser])
 
     def validate_images(self, image, image2):
-        """Validate and decode uploaded images"""
         if not image and not image2:
             raise ValidationError('At least one image must be provided')
         
@@ -218,42 +217,35 @@ class OptimizeImageView(APIView):
 
     def create_panorama(self, img1, img2):
         try:
-            # تنظیم اندازه یکسان
             height = min(img1.shape[0], img2.shape[0])
             width = min(img1.shape[1], img2.shape[1])
             img1 = cv2.resize(img1, (width, height))
             img2 = cv2.resize(img2, (width, height))
 
-            # تشخیص و توصیف ویژگی‌ها با SIFT
             sift = cv2.SIFT_create()
             kp1, des1 = sift.detectAndCompute(img1, None)
             kp2, des2 = sift.detectAndCompute(img2, None)
 
-            # تطبیق ویژگی‌ها با FLANN
             FLANN_INDEX_KDTREE = 1
             index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
             search_params = dict(checks=50)
             flann = cv2.FlannBasedMatcher(index_params, search_params)
             matches = flann.knnMatch(des1, des2, k=2)
 
-            # فیلتر کردن تطبیق‌های خوب
             good_matches = []
             for m, n in matches:
                 if m.distance < 0.7 * n.distance:
                     good_matches.append(m)
 
-            # محاسبه ماتریس همگرافی
             if len(good_matches) > 10:
                 src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
                 dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
                 H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
 
-                # ایجاد تصویر پانوراما
                 result_width = img1.shape[1] + img2.shape[1]
                 result = cv2.warpPerspective(img1, H, (result_width, height))
                 result[0:img2.shape[0], 0:img2.shape[1]] = img2
 
-                # برش حاشیه‌های اضافی
                 gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
                 _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
                 contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -345,6 +337,7 @@ class OptimizeImageView(APIView):
             )
 
             processed_img = images.get('img1')
+            self.img2 = images.get('img2')
         
             if serializer.validated_data.get('panorama_image') and 'img2' in images:
                 processed_img = self.create_panorama(processed_img, images['img2'])
