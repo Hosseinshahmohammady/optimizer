@@ -180,11 +180,92 @@ class OptimizeImageView(APIView):
             if self.perspective:
                 img = self.perspective_correction(img)
 
+            if self.kalman_line_detections:
+                img = self.kalman_line_detection(img)
+
+            if self.ransac_line_detections:
+                img = self.ransac_line_detection(img)
+
+            if self.curve_detections:
+                img = self.curve_detection(img)
+
+            if self.optimize_parameters:
+                img = self.optimize_parameter(img)
+
             return img
 
         except Exception as e:
             raise ValueError(f"Error processing image: {str(e)}")
         
+    def kalman_line_detection(self, img):
+    # تنظیمات کالمن فیلتر
+        kalman = cv2.KalmanFilter(4, 2)
+        kalman.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)
+        kalman.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)
+        
+        # تشخیص خطوط با پیش‌بینی حرکت
+        lines = cv2.HoughLinesP(self.edges, 1, np.pi/180, 50, minLineLength=100, maxLineGap=10)
+        predicted_lines = []
+        
+        for line in lines:
+            prediction = kalman.predict()
+            measurement = np.array([[line[0][0]], [line[0][1]]], np.float32)
+            kalman.correct(measurement)
+            predicted_lines.append(prediction)
+
+    def ransac_line_detection(self, points, iterations=100, threshold=3):
+        best_line = None
+        best_inliers = []
+        
+        for _ in range(iterations):
+            # انتخاب تصادفی دو نقطه
+            sample = points[np.random.choice(points.shape[0], 2, replace=False)]
+            
+            # محاسبه پارامترهای خط
+            x1, y1 = sample[0]
+            x2, y2 = sample[1]
+            
+            # محاسبه فاصله نقاط از خط
+            distances = np.abs((y2-y1)*points[:,0] - (x2-x1)*points[:,1] + x2*y1 - y2*x1) / np.sqrt((y2-y1)**2 + (x2-x1)**2)
+            
+            # شمارش inliers
+            inliers = points[distances < threshold]
+            
+            if len(inliers) > len(best_inliers):
+                best_inliers = inliers
+                best_line = (x1,y1,x2,y2)
+
+    def curve_detection(self, img):
+        # پیش‌پردازش
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        blur = cv2.GaussianBlur(gray, (5, 5), 0)
+        
+        # تشخیص لبه‌ها
+        edges = cv2.Canny(blur, 50, 150)
+        
+        # یافتن کانتورها
+        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # برازش منحنی
+        for contour in contours:
+            if len(contour) > 5:
+                ellipse = cv2.fitEllipse(contour)
+                cv2.ellipse(img, ellipse, (0,255,0), 2)
+
+    def optimize_parameter(self):
+        population = []
+        for _ in range(50):
+            params = {
+                'rho': np.random.uniform(0.5, 2),
+                'theta': np.random.uniform(np.pi/360, np.pi/90),
+                'threshold': np.random.randint(30, 100),
+                'minLineLength': np.random.randint(50, 200),
+                'maxLineGap': np.random.randint(5, 20)
+            }
+            population.append(params)
+
+
+
 
     def perspective_correction(self, img):
         height, width = img.shape[:2]
@@ -382,6 +463,10 @@ class OptimizeImageView(APIView):
             self.format_choice = serializer.validated_data.get('format_choice')
             self.quality = serializer.validated_data.get('quality')
             self.perspective = serializer.validated_data.get('perspective_correction', False)
+            self.kalman_line_detections = serializer.validated_data.get('kalman_line_detections', False)
+            self.ransac_line_detections = serializer.validated_data.get('ransac_line_detections', False)
+            self.curve_detections = serializer.validated_data.get('curve_detections', False)
+            self.optimize_parameters = serializer.validated_data.get('optimize_parameters', False)
             self.img2 = None
 
             images = self.validate_images(
