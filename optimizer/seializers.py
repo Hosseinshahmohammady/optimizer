@@ -23,10 +23,11 @@ class ImageUploadSerializer(serializers.Serializer):
     shear_x = serializers.FloatField(required=False, default=0)
     shear_y = serializers.FloatField(required=False, default=0)
     histogram_equalization = serializers.BooleanField(required=False, default=False)
-    Identify_features = serializers.BooleanField(required=False, default=False)
-    aligned_image = serializers.BooleanField(required=False, default=False)
-    combine_images = serializers.BooleanField(required=False, default=False)
-    panorama_image = serializers.BooleanField(required=False, default=False)
+    # Identify_features = serializers.BooleanField(required=False, default=False)
+    # aligned_image = serializers.BooleanField(required=False, default=False)
+    # combine_images = serializers.BooleanField(required=False, default=False)
+    # panorama_image = serializers.BooleanField(required=False, default=False)
+    perspective_correction = serializers.BooleanField(required=False, default=False)
 
 
     def validate_quality(self, value):

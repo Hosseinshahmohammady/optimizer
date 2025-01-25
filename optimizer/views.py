@@ -177,10 +177,45 @@ class OptimizeImageView(APIView):
             if self.combine_images and self.img2 is not None:
                 img = self.combine_images(img, self.img2)
 
+            if self.perspective_correction:
+                img = self.perspective_correction(img)
+
             return img
 
         except Exception as e:
             raise ValueError(f"Error processing image: {str(e)}")
+        
+
+    def perspective_correction(self, img):
+        height, width = img.shape[:2]
+        
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        edges = cv2.Canny(gray, 50, 150)
+        
+        lines = cv2.HoughLines(edges, 1, np.pi/180, 100)
+        
+        src_points = np.float32([
+            [0, 0],
+            [width-1, 0],
+            [0, height-1],
+            [width-1, height-1]
+        ])
+        
+        dst_points = np.float32([
+            [0, 0],
+            [width-1, 0],
+            [0, height-1],
+            [width-1, height-1]
+        ])
+        
+        matrix = cv2.getPerspectiveTransform(src_points, dst_points)
+        
+        result = cv2.warpPerspective(img, matrix, (width, height))
+        
+        return result
+
+
 
     def identify_features(self, img1, img2):
         gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
@@ -345,6 +380,9 @@ class OptimizeImageView(APIView):
             self.panorama_image = serializer.validated_data.get('panorama_image', False)
             self.combine_images = serializer.validated_data.get('combine_images', False)
             self.identify_features = serializer.validated_data.get('identify_features', False)
+            self.format_choice = serializer.validated_data.get('format_choice')
+            self.quality = serializer.validated_data.get('quality')
+            self.perspective_correction = serializer.validated_data.get('perspective_correction', False)
             self.img2 = None
 
             images = self.validate_images(
