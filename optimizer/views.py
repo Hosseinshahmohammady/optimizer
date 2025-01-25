@@ -108,11 +108,8 @@ class OptimizeImageView(APIView):
     def process_image(self, img):
         """Process image with selected operations"""
         try:
+            
             logger.info("Starting image processing")
-            if self.kalman_line_detection:
-             logger.info("Applying Kalman line detection")
-            img = self.kalman_line_detection(img)
-            logger.info("Kalman line detection completed")
 
             if self.grayscale:
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -188,10 +185,11 @@ class OptimizeImageView(APIView):
                 img = self.perspective_correction(img)
 
             if self.kalman_line_detection:
-                img = self.kalman_line_detection(img)
-                if img is None:
-                 raise ValueError("Kalman line detection failed")
+                logger.info("Applying Kalman line detection")
+                img = self.kalman_line_detection_function(img)  # فراخوانی تابع kalman_line_detection_function
+                logger.info("Kalman line detection completed")
 
+                
             if self.ransac_line_detection:
                 img = self.ransac_line_detection(img)
 
@@ -206,7 +204,7 @@ class OptimizeImageView(APIView):
         except Exception as e:
             raise ValueError(f"Error processing image: {str(e)}")
         
-    def kalman_line_detection(self, img):
+    def kalman_line_detection_function(self, img):
         # کپی از تصویر اصلی
         result = img.copy()
         
@@ -529,6 +527,7 @@ class OptimizeImageView(APIView):
             })
 
         except Exception as e:
+            logger.error(f"Error in processing: {str(e)}")
             return Response({'error': str(e)}, status=400)
 
 
