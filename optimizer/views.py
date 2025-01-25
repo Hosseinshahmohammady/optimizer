@@ -198,6 +198,9 @@ class OptimizeImageView(APIView):
             raise ValueError(f"Error processing image: {str(e)}")
         
     def kalman_line_detection(self, img):
+        # کپی از تصویر اصلی
+        result = img.copy()
+        
         # تبدیل به grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -208,16 +211,22 @@ class OptimizeImageView(APIView):
         kalman.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)
         
         lines = cv2.HoughLinesP(edges, 1, np.pi/180, 50, minLineLength=100, maxLineGap=10)
-        predicted_lines = []
         
         if lines is not None:
             for line in lines:
+                x1, y1, x2, y2 = line[0]
                 prediction = kalman.predict()
-                measurement = np.array([[line[0][0]], [line[0][1]]], np.float32)
+                measurement = np.array([[x1], [y1]], np.float32)
                 kalman.correct(measurement)
-                predicted_lines.append(prediction)
+                
+                # رسم خط پیش‌بینی شده
+                pred_x = int(prediction[0])
+                pred_y = int(prediction[1])
+                cv2.line(result, (x1, y1), (pred_x, pred_y), (0, 255, 0), 2)
+                cv2.line(result, (x2, y2), (pred_x, pred_y), (0, 0, 255), 2)
         
-        return img
+        return result
+
 
     def ransac_line_detection(self, points, iterations=100, threshold=3):
         best_line = None
