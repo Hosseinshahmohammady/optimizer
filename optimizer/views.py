@@ -210,8 +210,9 @@ class OptimizeImageView(APIView):
         kalman.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)
         kalman.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)
         
-        lines = cv2.HoughLinesP(edges, 1, np.pi/180, 50, minLineLength=100, maxLineGap=10)
-        
+        lines = cv2.HoughLinesP(edges, 1, np.pi/180, 50, 
+                                minLineLength=self.min_line_length, 
+                                maxLineGap=self.max_line_gap)
         if lines is not None:
             for line in lines:
                 x1, y1, x2, y2 = line[0]
