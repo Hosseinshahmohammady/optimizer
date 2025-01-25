@@ -168,16 +168,16 @@ class OptimizeImageView(APIView):
             if self.scale_x != 1.0 or self.scale_y != 1.0:
                 img = cv2.resize(img, None, fx=self.scale_x, fy=self.scale_y, interpolation=cv2.INTER_LINEAR)
 
-            if self.identify and self.img2 is not None:
+            if self.identify_features and self.img2 is not None:
                 img = self.identify_features(img, self.img2)
 
-            if self.aligne_image and self.img2 is not None:
+            if self.aligned_images and self.img2 is not None:
                 img = self.aligned_images(img, self.img2)
             
             if self.combine_images and self.img2 is not None:
-                img = self.combined_images(img, self.img2)
+                img = self.combine_images(img, self.img2)
 
-            if self.perspective:
+            if self.perspective_correction:
                 img = self.perspective_correction(img)
 
             if self.kalman_line_detection:
@@ -248,6 +248,8 @@ class OptimizeImageView(APIView):
             if len(inliers) > len(best_inliers):
                 best_inliers = inliers
                 best_line = (x1,y1,x2,y2)
+            return best_line
+
 
     def curve_detection(self, img):
         # پیش‌پردازش
@@ -356,7 +358,7 @@ class OptimizeImageView(APIView):
         return cv2.warpPerspective(img1, M, (width, height))
 
 
-    def combined_images(self, img1, img2):
+    def combine_images(self, img1, img2):
         height = min(img1.shape[0], img2.shape[0])
         width = min(img1.shape[1], img2.shape[1])
         img1 = cv2.resize(img1, (width, height))
@@ -470,13 +472,13 @@ class OptimizeImageView(APIView):
             self.translate_y = serializer.validated_data.get('translate_y', 0)
             self.scale_x = serializer.validated_data.get('scale_x', 1.0)
             self.scale_y = serializer.validated_data.get('scale_y', 1.0)
-            self.aligne_image = serializer.validated_data.get('aligned_image', False)
+            self.aligned_images = serializer.validated_data.get('aligned_image', False)
             self.panorama_image = serializer.validated_data.get('panorama_image', False)
             self.combine_images = serializer.validated_data.get('combine_images', False)
-            self.identify = serializer.validated_data.get('identify_features', False)
+            self.identify_features = serializer.validated_data.get('identify_features', False)
             self.format_choice = serializer.validated_data.get('format_choice')
             self.quality = serializer.validated_data.get('quality')
-            self.perspective = serializer.validated_data.get('perspective_correction', False)
+            self.perspective_correction = serializer.validated_data.get('perspective_correction', False)
             self.kalman_line_detection = serializer.validated_data.get('kalman_line_detections', False)
             self.ransac_line_detection = serializer.validated_data.get('ransac_line_detections', False)
             self.curve_detection = serializer.validated_data.get('curve_detections', False)
