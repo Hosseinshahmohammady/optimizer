@@ -52,17 +52,17 @@ class ImageUploadSerializer(serializers.Serializer):
     perspective = serializers.BooleanField(required=False, default=False)
 
     # اضافه کردن پارامترهای تشخیص خط کالمن
-    kalman_line_detections = serializers.BooleanField(default=False)
+    kalman_line_detection = serializers.BooleanField(default=False)
     min_line_length = serializers.IntegerField(default=100, min_value=10, required=False)
     max_line_gap = serializers.IntegerField(default=10, min_value=1, required=False)
     
     # پارامترهای RANSAC
-    ransac_detections = serializers.BooleanField(default=False)
+    ransac_detection = serializers.BooleanField(default=False)
     ransac_iterations = serializers.IntegerField(default=100, min_value=10, required=False)
     ransac_threshold = serializers.FloatField(default=3.0, min_value=0.1, required=False)
     
     # پارامترهای تشخیص منحنی
-    curve_detections = serializers.BooleanField(default=False)
+    curve_detection = serializers.BooleanField(default=False)
     gaussian_kernel = serializers.IntegerField(default=5, min_value=3, required=False)
     canny_threshold1 = serializers.IntegerField(default=50, min_value=1, required=False)
     canny_threshold2 = serializers.IntegerField(default=150, min_value=1, required=False)

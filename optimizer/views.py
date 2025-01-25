@@ -180,17 +180,17 @@ class OptimizeImageView(APIView):
             if self.perspective:
                 img = self.perspective_correction(img)
 
-            if self.kalman_line_detections:
+            if self.kalman_line_detection:
                 img = self.kalman_line_detection(img)
 
-            if self.ransac_line_detections:
+            if self.ransac_line_detection:
                 img = self.ransac_line_detection(img)
 
-            if self.curve_detections:
+            if self.curve_detection:
                 img = self.curve_detection(img)
 
             if self.optimize_parameters:
-                img = self.optimize_parameter(img)
+                img = self.optimize_parameters(img)
 
             return img
 
@@ -198,25 +198,30 @@ class OptimizeImageView(APIView):
             raise ValueError(f"Error processing image: {str(e)}")
         
     def kalman_line_detection(self, img):
-    # تنظیمات کالمن فیلتر
+        # تبدیل به grayscale
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        blur = cv2.GaussianBlur(gray, (5, 5), 0)
+        edges = cv2.Canny(blur, 50, 150)
+        
         kalman = cv2.KalmanFilter(4, 2)
         kalman.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)
         kalman.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)
         
-        # تشخیص خطوط با پیش‌بینی حرکت
-        lines = cv2.HoughLinesP(self.edges, 1, np.pi/180, 50, minLineLength=100, maxLineGap=10)
+        lines = cv2.HoughLinesP(edges, 1, np.pi/180, 50, minLineLength=100, maxLineGap=10)
         predicted_lines = []
         
-        for line in lines:
-            prediction = kalman.predict()
-            measurement = np.array([[line[0][0]], [line[0][1]]], np.float32)
-            kalman.correct(measurement)
-            predicted_lines.append(prediction)
+        if lines is not None:
+            for line in lines:
+                prediction = kalman.predict()
+                measurement = np.array([[line[0][0]], [line[0][1]]], np.float32)
+                kalman.correct(measurement)
+                predicted_lines.append(prediction)
+        
+        return img
 
     def ransac_line_detection(self, points, iterations=100, threshold=3):
         best_line = None
-        best_inliers = []
-        
+        best_inliers = []   
         for _ in range(iterations):
             # انتخاب تصادفی دو نقطه
             sample = points[np.random.choice(points.shape[0], 2, replace=False)]
@@ -252,7 +257,7 @@ class OptimizeImageView(APIView):
                 ellipse = cv2.fitEllipse(contour)
                 cv2.ellipse(img, ellipse, (0,255,0), 2)
 
-    def optimize_parameter(self):
+    def optimize_parameters(self):
         population = []
         for _ in range(50):
             params = {
@@ -463,9 +468,9 @@ class OptimizeImageView(APIView):
             self.format_choice = serializer.validated_data.get('format_choice')
             self.quality = serializer.validated_data.get('quality')
             self.perspective = serializer.validated_data.get('perspective_correction', False)
-            self.kalman_line_detections = serializer.validated_data.get('kalman_line_detections', False)
-            self.ransac_line_detections = serializer.validated_data.get('ransac_line_detections', False)
-            self.curve_detections = serializer.validated_data.get('curve_detections', False)
+            self.kalman_line_detection = serializer.validated_data.get('kalman_line_detections', False)
+            self.ransac_line_detection = serializer.validated_data.get('ransac_line_detections', False)
+            self.curve_detection = serializer.validated_data.get('curve_detections', False)
             self.optimize_parameters = serializer.validated_data.get('optimize_parameters', False)
             self.img2 = None
 
