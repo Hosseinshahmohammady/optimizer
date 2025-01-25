@@ -16,6 +16,7 @@ from .seializers import ImageUploadSerializer
 import os
 import cv2
 import logging
+logger = logging.getLogger(__name__)
 import numpy as np
 from .forms import SignUpForm, LoginForm
 from django.shortcuts import render, redirect
@@ -107,6 +108,12 @@ class OptimizeImageView(APIView):
     def process_image(self, img):
         """Process image with selected operations"""
         try:
+            logger.info("Starting image processing")
+            if self.kalman_line_detection:
+             logger.info("Applying Kalman line detection")
+            img = self.kalman_line_detection(img)
+            logger.info("Kalman line detection completed")
+
             if self.grayscale:
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -182,6 +189,8 @@ class OptimizeImageView(APIView):
 
             if self.kalman_line_detection:
                 img = self.kalman_line_detection(img)
+                if img is None:
+                 raise ValueError("Kalman line detection failed")
 
             if self.ransac_line_detection:
                 img = self.ransac_line_detection(img)
@@ -213,8 +222,10 @@ class OptimizeImageView(APIView):
         lines = cv2.HoughLinesP(edges, 1, np.pi/180, 50, 
                                 minLineLength=self.min_line_length, 
                                 maxLineGap=self.max_line_gap)
-        if lines is not None:
-            for line in lines:
+        if lines is None:
+            return result
+        
+        for line in lines:
                 x1, y1, x2, y2 = line[0]
                 prediction = kalman.predict()
                 measurement = np.array([[x1], [y1]], np.float32)
@@ -480,7 +491,11 @@ class OptimizeImageView(APIView):
             self.format_choice = serializer.validated_data.get('format_choice')
             self.quality = serializer.validated_data.get('quality')
             self.perspective_correction = serializer.validated_data.get('perspective_correction', False)
-            self.kalman_line_detection = serializer.validated_data.get('kalman_line_detections', False)
+
+            self.kalman_line_detection = serializer.validated_data['kalman_line_detection']
+            self.min_line_length = serializer.validated_data['min_line_length']
+            self.max_line_gap = serializer.validated_data['max_line_gap']
+
             self.ransac_line_detection = serializer.validated_data.get('ransac_line_detections', False)
             self.curve_detection = serializer.validated_data.get('curve_detections', False)
             self.optimize_parameters = serializer.validated_data.get('optimize_parameters', False)

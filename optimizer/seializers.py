@@ -53,8 +53,8 @@ class ImageUploadSerializer(serializers.Serializer):
 
     # اضافه کردن پارامترهای تشخیص خط کالمن
     kalman_line_detection = serializers.BooleanField(default=False)
-    min_line_length = serializers.IntegerField(default=100, min_value=10, required=False)
-    max_line_gap = serializers.IntegerField(default=10, min_value=1, required=False)
+    min_line_length = serializers.IntegerField(default=100, min_value=10, required=True)
+    max_line_gap = serializers.IntegerField(default=10, min_value=1, required=True)
     
     # پارامترهای RANSAC
     ransac_detection = serializers.BooleanField(default=False)
