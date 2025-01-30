@@ -187,20 +187,25 @@ class OptimizeImageView(APIView):
             if self.kalman_line_detection:
                 logger.info("Applying Kalman line detection")
                 img = self.kalman_line_detection_function(img)  # فراخوانی تابع kalman_line_detection_function
-                logger.info("Kalman line detection completed")
+                logger.info("Kalman line completed")
 
                 
             if self.ransac_detection:
                 logger.info("Applying ransac line detection")
                 img = self.ransac_line_detection(img)
-                logger.info("ransac line detection completed")
+                logger.info("Kalman line detection completed")
 
 
             if self.curve_detection:
-                img = self.curve_detection(img)
+                logger.info("Applying curve line detection")
+                img = self.curve_detection_function(img)
+                logger.info("curve line detection detection")
+
 
             if self.optimize_parameters:
-                img = self.optimize_parameters(img)
+                logger.info("Applying optimize parameters detection")
+                img = self.optimize_parameters_function(img)
+                logger.info("optimize parameters detection detection")
 
             return img
 
@@ -293,7 +298,7 @@ class OptimizeImageView(APIView):
 
 
 
-    def curve_detection(self, img):
+    def curve_detection_function(self, img):
         # پیش‌پردازش
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -310,7 +315,7 @@ class OptimizeImageView(APIView):
                 ellipse = cv2.fitEllipse(contour)
                 cv2.ellipse(img, ellipse, (0,255,0), 2)
 
-    def optimize_parameters(self):
+    def optimize_parameters_function(self):
         population = []
         for _ in range(50):
             params = {
@@ -531,8 +536,18 @@ class OptimizeImageView(APIView):
             self.ransac_threshold = serializer.validated_data['ransac_threshold']
             self.min_inliers = serializer.validated_data['min_inliers']
 
-            self.curve_detection = serializer.validated_data.get('curve_detections', False)
-            self.optimize_parameters = serializer.validated_data.get('optimize_parameters', False)
+            self.curve_detection = serializer.validated_data.get['curve_detections']
+            self.gaussian_kernel = serializer.validated_data.get['gaussian_kernel']
+            self.canny_threshold1 = serializer.validated_data.get['canny_threshold1']
+            self.canny_threshold2 = serializer.validated_data.get['canny_threshold2']
+
+            self.optimize_parameters = serializer.validated_data.get['optimize_parameters']
+            self.population_size = serializer.validated_data.get['population_size']
+            self.rho_min = serializer.validated_data.get['rho_min']
+            self.rho_max = serializer.validated_data.get['rho_max']
+            self.theta_min = serializer.validated_data.get['theta_min']
+            self.theta_max = serializer.validated_data.get['theta_max']
+
             self.img2 = None
 
             images = self.validate_images(
