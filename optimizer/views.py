@@ -339,18 +339,44 @@ class OptimizeImageView(APIView):
 
 
     def optimize_parameters_function(self, img):
-     population = []
-     for _ in range(50):
-        params = {
-            'rho': np.random.uniform(0.5, 2),
-            'theta': np.random.uniform(np.pi/360, np.pi/90),
-            'threshold': np.random.randint(30, 100),
-            'minLineLength': np.random.randint(50, 200),
-            'maxLineGap': np.random.randint(5, 20)
-        }
-        population.append(params)
-    
-     return img  
+        # ایجاد جمعیت اولیه
+        population = []
+        for _ in range(self.population_size):
+            params = {
+                'rho': np.random.uniform(self.rho_min, self.rho_max),
+                'theta': np.random.uniform(self.theta_min, self.theta_max),
+                'threshold': np.random.randint(30, 100),
+                'minLineLength': np.random.randint(50, 200),
+                'maxLineGap': np.random.randint(5, 20)
+            }
+            population.append(params)
+
+        result = img.copy()
+        best_params = population[0]  # انتخاب بهترین پارامترها
+        
+        # تبدیل به grayscale
+        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+        
+        # اعمال پارامترهای بهینه شده
+        edges = cv2.Canny(gray, 
+                        best_params['threshold'], 
+                        best_params['threshold'] * 2)
+        
+        lines = cv2.HoughLinesP(edges, 
+                            best_params['rho'], 
+                            best_params['theta'],
+                            best_params['threshold'],
+                            minLineLength=best_params['minLineLength'],
+                            maxLineGap=best_params['maxLineGap'])
+        
+        # رسم خطوط
+        if lines is not None:
+            for line in lines:
+                x1, y1, x2, y2 = line[0]
+                cv2.line(result, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        
+        return result
+ 
 
 
 
