@@ -536,17 +536,18 @@ class OptimizeImageView(APIView):
             self.ransac_threshold = serializer.validated_data['ransac_threshold']
             self.min_inliers = serializer.validated_data['min_inliers']
 
-            self.curve_detection = serializer.validated_data.get['curve_detections']
-            self.gaussian_kernel = serializer.validated_data.get['gaussian_kernel']
-            self.canny_threshold1 = serializer.validated_data.get['canny_threshold1']
-            self.canny_threshold2 = serializer.validated_data.get['canny_threshold2']
+            self.curve_detection = serializer.validated_data.get('curve_detections')
+            self.gaussian_kernel = serializer.validated_data.get('gaussian_kernel')
+            self.canny_threshold1 = serializer.validated_data.get('canny_threshold1')
+            self.canny_threshold2 = serializer.validated_data.get('canny_threshold2')
 
-            self.optimize_parameters = serializer.validated_data.get['optimize_parameters']
-            self.population_size = serializer.validated_data.get['population_size']
-            self.rho_min = serializer.validated_data.get['rho_min']
-            self.rho_max = serializer.validated_data.get['rho_max']
-            self.theta_min = serializer.validated_data.get['theta_min']
-            self.theta_max = serializer.validated_data.get['theta_max']
+            self.optimize_parameters = serializer.validated_data.get('optimize_parameters')
+            self.population_size = serializer.validated_data.get('population_size')
+            self.rho_min = serializer.validated_data.get('rho_min')
+            self.rho_max = serializer.validated_data.get('rho_max')
+            self.theta_min = serializer.validated_data.get('theta_min')
+            self.theta_max = serializer.validated_data.get('theta_max')
+
 
             self.img2 = None
 
