@@ -561,10 +561,11 @@ class OptimizeImageView(APIView):
             self.ransac_threshold = serializer.validated_data['ransac_threshold']
             self.min_inliers = serializer.validated_data['min_inliers']
 
-            self.canny_threshold1 = serializer.validated_data.get('canny_threshold1')
-            self.gaussian_kernel = serializer.validated_data.get('gaussian_kernel')
-            self.canny_threshold1 = serializer.validat
-            self.canny_threshold2 = serializer.validated_data.get('canny_threshold2')
+            self.curve_detection = serializer.validated_data.get('curve_detection', False)
+            self.gaussian_kernel = serializer.validated_data.get('gaussian_kernel', 5)
+            self.canny_threshold1 = serializer.validated_data.get('canny_threshold1', 50)
+            self.canny_threshold2 = serializer.validated_data.get('canny_threshold2', 150)
+
 
             self.optimize_parameters = serializer.validated_data.get('optimize_parameters')
             self.population_size = serializer.validated_data.get('population_size')
