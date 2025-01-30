@@ -382,33 +382,44 @@ class OptimizeImageView(APIView):
 
 
     def perspective_correction(self, img):
-        height, width = img.shape[:2]
-        
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        edges = cv2.Canny(gray, 50, 150)
-        
-        lines = cv2.HoughLines(edges, 1, np.pi/180, 100)
-        
-        src_points = np.float32([
-            [0, 0],
-            [width-1, 0],
-            [0, height-1],
-            [width-1, height-1]
-        ])
-        
-        dst_points = np.float32([
-            [0, 0],
-            [width-1, 0],
-            [0, height-1],
-            [width-1, height-1]
-        ])
-        
-        matrix = cv2.getPerspectiveTransform(src_points, dst_points)
-        
-        result = cv2.warpPerspective(img, matrix, (width, height))
-        
-        return result
+        try:
+            height, width = img.shape[:2]
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            edges = cv2.Canny(gray, 50, 150)
+            
+            # بررسی وجود خطوط
+            lines = cv2.HoughLines(edges, 1, np.pi/180, 100)
+            if lines is None:
+                return img
+                
+            # نقاط مبدا
+            src_points = np.float32([
+                [0, 0],
+                [width-1, 0],
+                [0, height-1],
+                [width-1, height-1]
+            ])
+            
+            # نقاط مقصد
+            dst_points = np.float32([
+                [0, 0],
+                [width-1, 0],
+                [0, height-1],
+                [width-1, height-1]
+            ])
+            
+            # محاسبه ماتریس تبدیل
+            matrix = cv2.getPerspectiveTransform(src_points, dst_points)
+            
+            # اعمال تبدیل پرسپکتیو
+            result = cv2.warpPerspective(img, matrix, (width, height))
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in perspective correction: {str(e)}")
+            return img
+
 
 
 
