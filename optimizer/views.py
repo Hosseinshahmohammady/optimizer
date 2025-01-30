@@ -314,18 +314,21 @@ class OptimizeImageView(APIView):
             if len(contour) > 5:
                 ellipse = cv2.fitEllipse(contour)
                 cv2.ellipse(img, ellipse, (0,255,0), 2)
+        return img
 
-    def optimize_parameters_function(self):
-        population = []
-        for _ in range(50):
-            params = {
-                'rho': np.random.uniform(0.5, 2),
-                'theta': np.random.uniform(np.pi/360, np.pi/90),
-                'threshold': np.random.randint(30, 100),
-                'minLineLength': np.random.randint(50, 200),
-                'maxLineGap': np.random.randint(5, 20)
-            }
-            population.append(params)
+    def optimize_parameters_function(self, img):
+     population = []
+     for _ in range(50):
+        params = {
+            'rho': np.random.uniform(0.5, 2),
+            'theta': np.random.uniform(np.pi/360, np.pi/90),
+            'threshold': np.random.randint(30, 100),
+            'minLineLength': np.random.randint(50, 200),
+            'maxLineGap': np.random.randint(5, 20)
+        }
+        population.append(params)
+    
+     return img  
 
 
 
