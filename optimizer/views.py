@@ -385,36 +385,53 @@ class OptimizeImageView(APIView):
         try:
             height, width = img.shape[:2]
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            edges = cv2.Canny(gray, 50, 150)
             
-            # بررسی وجود خطوط
-            lines = cv2.HoughLines(edges, 1, np.pi/180, 100)
-            if lines is None:
-                return img
+            # بهبود کنتراست تصویر
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+            gray = clahe.apply(gray)
+            
+            # نویزگیری
+            blur = cv2.GaussianBlur(gray, (5, 5), 0)
+            
+            # تشخیص لبه با پارامترهای بهینه
+            edges = cv2.Canny(blur, 50, 150, apertureSize=3)
+            
+            # یافتن خطوط با دقت بیشتر
+            lines = cv2.HoughLines(edges, 1, np.pi/180, threshold=100)
+            
+            if lines is not None:
+                # محاسبه نقاط گوشه بر اساس خطوط یافت شده
+                angles = []
+                for rho, theta in lines[:, 0]:
+                    angles.append(theta)
                 
-            # نقاط مبدا
-            src_points = np.float32([
-                [0, 0],
-                [width-1, 0],
-                [0, height-1],
-                [width-1, height-1]
-            ])
-            
-            # نقاط مقصد
-            dst_points = np.float32([
-                [0, 0],
-                [width-1, 0],
-                [0, height-1],
-                [width-1, height-1]
-            ])
-            
-            # محاسبه ماتریس تبدیل
-            matrix = cv2.getPerspectiveTransform(src_points, dst_points)
-            
-            # اعمال تبدیل پرسپکتیو
-            result = cv2.warpPerspective(img, matrix, (width, height))
-            
-            return result
+                # محاسبه زاویه اصلی تصویر
+                dominant_angle = np.median(angles)
+                
+                # تنظیم نقاط مقصد با توجه به زاویه
+                offset = int(0.1 * min(height, width))
+                src_points = np.float32([
+                    [offset, offset],
+                    [width-offset, offset],
+                    [offset, height-offset],
+                    [width-offset, height-offset]
+                ])
+                
+                dst_points = np.float32([
+                    [0, 0],
+                    [width, 0],
+                    [0, height],
+                    [width, height]
+                ])
+                
+                matrix = cv2.getPerspectiveTransform(src_points, dst_points)
+                result = cv2.warpPerspective(img, matrix, (width, height))
+                
+                logger.info("Perspective correction applied successfully")
+                return result
+                
+            logger.info("No lines detected for perspective correction")
+            return img
             
         except Exception as e:
             logger.error(f"Error in perspective correction: {str(e)}")
