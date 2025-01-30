@@ -382,60 +382,75 @@ class OptimizeImageView(APIView):
 
 
     def perspective_correction(self, img):
-        try:
-            height, width = img.shape[:2]
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # حفظ کیفیت اصلی تصویر
+        result = img.copy()
+        height, width = img.shape[:2]
+        
+        # تبدیل به grayscale با حفظ جزئیات
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        # بهبود کنتراست با حفظ جزئیات
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+        gray = clahe.apply(gray)
+        
+        # نویزگیری هوشمند
+        blur = cv2.bilateralFilter(gray, 11, 17, 17)
+        
+        # تشخیص لبه‌های پلاک
+        edges = cv2.Canny(blur, 30, 200)
+        
+        # یافتن کانتورها
+        contours, _ = cv2.findContours(edges.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)[:10]
+        
+        plate_contour = None
+        for contour in contours:
+            perimeter = cv2.arcLength(contour, True)
+            approx = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
             
-            # بهبود کنتراست تصویر
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-            gray = clahe.apply(gray)
+            if len(approx) == 4:  # پلاک معمولاً 4 گوشه دارد
+                plate_contour = approx
+                break
+        
+        if plate_contour is not None:
+            # تعیین نقاط گوشه پلاک
+            src_points = np.float32(plate_contour.reshape(4, 2))
             
-            # نویزگیری
-            blur = cv2.GaussianBlur(gray, (5, 5), 0)
+            # مرتب‌سازی نقاط گوشه
+            rect = np.zeros((4, 2), dtype="float32")
+            s = src_points.sum(axis=1)
+            rect[0] = src_points[np.argmin(s)]
+            rect[2] = src_points[np.argmax(s)]
+            diff = np.diff(src_points, axis=1)
+            rect[1] = src_points[np.argmin(diff)]
+            rect[3] = src_points[np.argmax(diff)]
             
-            # تشخیص لبه با پارامترهای بهینه
-            edges = cv2.Canny(blur, 50, 150, apertureSize=3)
+            # تعیین ابعاد پلاک استاندارد
+            (tl, tr, br, bl) = rect
+            widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+            widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+            maxWidth = max(int(widthA), int(widthB))
             
-            # یافتن خطوط با دقت بیشتر
-            lines = cv2.HoughLines(edges, 1, np.pi/180, threshold=100)
+            heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+            heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+            maxHeight = max(int(heightA), int(heightB))
             
-            if lines is not None:
-                # محاسبه نقاط گوشه بر اساس خطوط یافت شده
-                angles = []
-                for rho, theta in lines[:, 0]:
-                    angles.append(theta)
-                
-                # محاسبه زاویه اصلی تصویر
-                dominant_angle = np.median(angles)
-                
-                # تنظیم نقاط مقصد با توجه به زاویه
-                offset = int(0.1 * min(height, width))
-                src_points = np.float32([
-                    [offset, offset],
-                    [width-offset, offset],
-                    [offset, height-offset],
-                    [width-offset, height-offset]
-                ])
-                
-                dst_points = np.float32([
-                    [0, 0],
-                    [width, 0],
-                    [0, height],
-                    [width, height]
-                ])
-                
-                matrix = cv2.getPerspectiveTransform(src_points, dst_points)
-                result = cv2.warpPerspective(img, matrix, (width, height))
-                
-                logger.info("Perspective correction applied successfully")
-                return result
-                
-            logger.info("No lines detected for perspective correction")
-            return img
+            dst_points = np.array([
+                [0, 0],
+                [maxWidth - 1, 0],
+                [maxWidth - 1, maxHeight - 1],
+                [0, maxHeight - 1]], dtype="float32")
             
-        except Exception as e:
-            logger.error(f"Error in perspective correction: {str(e)}")
-            return img
+            # اعمال تبدیل پرسپکتیو با کیفیت بالا
+            matrix = cv2.getPerspectiveTransform(rect, dst_points)
+            warped = cv2.warpPerspective(result, matrix, (maxWidth, maxHeight))
+            
+            # بهبود نهایی کیفیت
+            warped = cv2.resize(warped, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+            return warped
+        
+        return result
+
 
 
 
