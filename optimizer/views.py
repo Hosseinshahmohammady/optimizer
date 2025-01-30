@@ -300,21 +300,27 @@ class OptimizeImageView(APIView):
 
     def curve_detection_function(self, img):
         result = img.copy()
-        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-        blur = cv2.GaussianBlur(gray, (5, 5), 0)
         
-        # تشخیص لبه‌ها
-        edges = cv2.Canny(blur, 50, 150)
+        try:
+            gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+        except cv2.error:
+            return result
+            
+        blur = cv2.GaussianBlur(gray, (7, 7), 1.5)
+        edges = cv2.Canny(blur, 30, 200)
         
-        # یافتن کانتورها
-        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        # برازش منحنی
         for contour in contours:
-            if len(contour) > 5:
-                ellipse = cv2.fitEllipse(contour)
-                cv2.ellipse(result, ellipse, (0,255,0), 2)
+            if len(contour) > 10: 
+                try:
+                    ellipse = cv2.fitEllipse(contour)
+                    cv2.ellipse(result, ellipse, (0, 255, 0), 3)  
+                except cv2.error:
+                    continue
+                    
         return result
+
 
     def optimize_parameters_function(self, img):
      population = []
