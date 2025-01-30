@@ -212,7 +212,6 @@ class OptimizeImageView(APIView):
                 img = self.enhance_image_quality_function(img)
                 logger.info("enhance image quality detection detection")
 
-            
 
             return img
 
@@ -221,31 +220,36 @@ class OptimizeImageView(APIView):
         
 
     def enhance_image_quality_function(self, img):
-        # کپی از تصویر اصلی
         result = img.copy()
-        
-        # تبدیل به LAB color space برای جداسازی روشنایی
+    
+        result = cv2.convertScaleAbs(result, alpha=1.3, beta=5)
+            
+            # نویزگیری ملایم‌تر
+        result = cv2.fastNlMeansDenoisingColored(result, None, 5, 5, 7, 15)
+            
+            # تبدیل به LAB و بهبود روشنایی
         lab = cv2.cvtColor(result, cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(lab)
-        
-        # بهبود کنتراست با CLAHE
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+            
+            # CLAHE با پارامترهای ملایم‌تر
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4,4))
         l = clahe.apply(l)
-        
-        # ترکیب مجدد کانال‌ها
+            
+            # ترکیب مجدد
         lab = cv2.merge((l,a,b))
         result = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
-        
-        # کاهش نویز با حفظ لبه‌ها
-        result = cv2.fastNlMeansDenoisingColored(result, None, 10, 10, 7, 21)
-        
-        # افزایش وضوح
-        kernel_sharpening = np.array([[-1,-1,-1], 
-                                    [-1, 9,-1],
-                                    [-1,-1,-1]])
-        result = cv2.filter2D(result, -1, kernel_sharpening)
-        
-        # افزایش رزولوشن
+            
+            # شارپنس ملایم
+        kernel = np.array([
+                [-0.5,-0.5,-0.5],
+                [-0.5, 5.5,-0.5],
+                [-0.5,-0.5,-0.5]
+            ])
+        result = cv2.filter2D(result, -1, kernel)
+            
+            # افزایش رزولوشن با حفظ جزئیات
+        result = cv2.resize(result, None, fx=1.5, fy=1.5, interpolation=cv2.INTER_LANCZOS4)
+            
         return result
 
 
