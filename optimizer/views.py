@@ -207,10 +207,48 @@ class OptimizeImageView(APIView):
                 img = self.optimize_parameters_function(img)
                 logger.info("optimize parameters detection detection")
 
+            if self.enhance_image_quality:
+                logger.info("Applying enhance image quality detection")
+                img = self.enhance_image_quality_function(img)
+                logger.info("enhance image quality detection detection")
+
+            
+
             return img
 
         except Exception as e:
             raise ValueError(f"Error processing image: {str(e)}")
+        
+
+    def enhance_image_quality_function(self, img):
+        # کپی از تصویر اصلی
+        result = img.copy()
+        
+        # تبدیل به LAB color space برای جداسازی روشنایی
+        lab = cv2.cvtColor(result, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        
+        # بهبود کنتراست با CLAHE
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+        l = clahe.apply(l)
+        
+        # ترکیب مجدد کانال‌ها
+        lab = cv2.merge((l,a,b))
+        result = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+        
+        # کاهش نویز با حفظ لبه‌ها
+        result = cv2.fastNlMeansDenoisingColored(result, None, 10, 10, 7, 21)
+        
+        # افزایش وضوح
+        kernel_sharpening = np.array([[-1,-1,-1], 
+                                    [-1, 9,-1],
+                                    [-1,-1,-1]])
+        result = cv2.filter2D(result, -1, kernel_sharpening)
+        
+        # افزایش رزولوشن
+        return result
+
+
         
     def kalman_line_detection_function(self, img):
         result = img.copy()
@@ -627,6 +665,15 @@ class OptimizeImageView(APIView):
             self.theta_min = serializer.validated_data.get('theta_min')
             self.theta_max = serializer.validated_data.get('theta_max')
 
+            self.enhance_image_quality = serializer.validated_data.get('enhance_image_quality')
+            self.clahe_clip_limit = serializer.validated_data.get('clahe_clip_limit')
+            self.clahe_grid_size = serializer.validated_data.get('clahe_grid_size')
+            self.denoise_strength = serializer.validated_data.get('denoise_strength')
+            self.denoise_color_strength = serializer.validated_data.get('denoise_color_strength')
+            self.sharpness_strength = serializer.validated_data.get('sharpness_strength')
+            self.upscale_factor = serializer.validated_data.get('upscale_factor')
+            self.enhance_contrast = serializer.validated_data.get('enhance_contrast')
+            self.enhance_brightness = serializer.validated_data.get('enhance_brightness')
 
             self.img2 = None
 

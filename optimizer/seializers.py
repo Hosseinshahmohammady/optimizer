@@ -76,6 +76,21 @@ class ImageUploadSerializer(serializers.Serializer):
     theta_min = serializers.FloatField(default=np.pi/360, required=False)
     theta_max = serializers.FloatField(default=np.pi/90, required=False)
 
+
+    # در ImageUploadSerializer اضافه کنید:
+    enhance_image_quality = serializers.BooleanField(default=False)
+    clahe_clip_limit = serializers.FloatField(default=3.0, min_value=0.1, max_value=10.0, required=False)
+    clahe_grid_size = serializers.IntegerField(default=8, min_value=2, max_value=16, required=False)
+    denoise_strength = serializers.IntegerField(default=10, min_value=1, max_value=30, required=False)
+    denoise_color_strength = serializers.IntegerField(default=10, min_value=1, max_value=30, required=False)
+    sharpness_strength = serializers.FloatField(default=1.0, min_value=0.1, max_value=3.0, required=False)
+    upscale_factor = serializers.FloatField(default=2.0, min_value=1.0, max_value=4.0, required=False)
+    enhance_contrast = serializers.FloatField(default=1.0, min_value=0.1, max_value=3.0, required=False)
+    enhance_brightness = serializers.IntegerField(default=0, min_value=-100, max_value=100, required=False)
+
+
+    
+
     def validate_quality(self, value):
         if value is None:
             raise serializers.ValidationError("Quality is required")
