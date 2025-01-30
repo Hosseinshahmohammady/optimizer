@@ -220,38 +220,32 @@ class OptimizeImageView(APIView):
         
 
     def enhance_image_quality_function(self, img):
-        result = img.copy()
+        esult = img.copy()
     
-        result = cv2.convertScaleAbs(result, alpha=1.3, beta=5)
-            
-            # نویزگیری ملایم‌تر
-        result = cv2.fastNlMeansDenoisingColored(result, None, 5, 5, 7, 15)
-            
-            # تبدیل به LAB و بهبود روشنایی
-        lab = cv2.cvtColor(result, cv2.COLOR_BGR2LAB)
-        l, a, b = cv2.split(lab)
-            
-            # CLAHE با پارامترهای ملایم‌تر
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4,4))
-        l = clahe.apply(l)
-            
-            # ترکیب مجدد
-        lab = cv2.merge((l,a,b))
-        result = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
-            
-            # شارپنس ملایم
+        # 1. ابتدا نویزگیری هوشمند با حفظ لبه‌ها
+        result = cv2.bilateralFilter(result, 9, 75, 75)
+        
+        # 2. تنظیم کنتراست و روشنایی با مقادیر دقیق
+        result = cv2.convertScaleAbs(result, alpha=1.15, beta=0)
+        
+        # 3. بهبود جزئیات با Unsharp Masking
+        gaussian = cv2.GaussianBlur(result, (0, 0), 2.0)
+        result = cv2.addWeighted(result, 1.5, gaussian, -0.5, 0)
+        
+        # 4. افزایش وضوح با حفظ کیفیت
         kernel = np.array([
-                [-0.5,-0.5,-0.5],
-                [-0.5, 5.5,-0.5],
-                [-0.5,-0.5,-0.5]
-            ])
+            [0, -1, 0],
+            [-1, 5, -1],
+            [0, -1, 0]
+        ])
         result = cv2.filter2D(result, -1, kernel)
-            
-            # افزایش رزولوشن با حفظ جزئیات
-        result = cv2.resize(result, None, fx=1.5, fy=1.5, interpolation=cv2.INTER_LANCZOS4)
-            
+        
+        # 5. افزایش رزولوشن با الگوریتم مناسب
+        height, width = result.shape[:2]
+        result = cv2.resize(result, (int(width*1.2), int(height*1.2)), 
+                        interpolation=cv2.INTER_CUBIC)
+        
         return result
-
 
         
     def kalman_line_detection_function(self, img):
@@ -669,15 +663,15 @@ class OptimizeImageView(APIView):
             self.theta_min = serializer.validated_data.get('theta_min')
             self.theta_max = serializer.validated_data.get('theta_max')
 
-            self.enhance_image_quality = serializer.validated_data.get('enhance_image_quality')
-            self.clahe_clip_limit = serializer.validated_data.get('clahe_clip_limit')
-            self.clahe_grid_size = serializer.validated_data.get('clahe_grid_size')
-            self.denoise_strength = serializer.validated_data.get('denoise_strength')
-            self.denoise_color_strength = serializer.validated_data.get('denoise_color_strength')
-            self.sharpness_strength = serializer.validated_data.get('sharpness_strength')
-            self.upscale_factor = serializer.validated_data.get('upscale_factor')
-            self.enhance_contrast = serializer.validated_data.get('enhance_contrast')
-            self.enhance_brightness = serializer.validated_data.get('enhance_brightness')
+            self.enhance_image_quality = serializer.validated_data.get('enhance_quality', False)
+            self.bilateral_d = serializer.validated_data.get('bilateral_d', 9)
+            self.bilateral_sigma_color = serializer.validated_data.get('bilateral_sigma_color', 75)
+            self.bilateral_sigma_space = serializer.validated_data.get('bilateral_sigma_space', 75)
+            self.contrast_alpha = serializer.validated_data.get('contrast_alpha', 1.15)
+            self.unsharp_weight = serializer.validated_data.get('unsharp_weight', 1.5)
+            self.gaussian_sigma = serializer.validated_data.get('gaussian_sigma', 2.0)
+            self.resize_factor = serializer.validated_data.get('resize_factor', 1.2)
+
 
             self.img2 = None
 

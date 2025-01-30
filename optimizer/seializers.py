@@ -78,15 +78,15 @@ class ImageUploadSerializer(serializers.Serializer):
 
 
     # در ImageUploadSerializer اضافه کنید:
+
     enhance_image_quality = serializers.BooleanField(default=False)
-    clahe_clip_limit = serializers.FloatField(default=3.0, min_value=0.1, max_value=10.0, required=False)
-    clahe_grid_size = serializers.IntegerField(default=8, min_value=2, max_value=16, required=False)
-    denoise_strength = serializers.IntegerField(default=10, min_value=1, max_value=30, required=False)
-    denoise_color_strength = serializers.IntegerField(default=10, min_value=1, max_value=30, required=False)
-    sharpness_strength = serializers.FloatField(default=1.0, min_value=0.1, max_value=3.0, required=False)
-    upscale_factor = serializers.FloatField(default=2.0, min_value=1.0, max_value=4.0, required=False)
-    enhance_contrast = serializers.FloatField(default=1.0, min_value=0.1, max_value=3.0, required=False)
-    enhance_brightness = serializers.IntegerField(default=0, min_value=-100, max_value=100, required=False)
+    bilateral_d = serializers.IntegerField(default=9, min_value=5, max_value=15, required=False)
+    bilateral_sigma_color = serializers.IntegerField(default=75, min_value=50, max_value=150, required=False)
+    bilateral_sigma_space = serializers.IntegerField(default=75, min_value=50, max_value=150, required=False)
+    contrast_alpha = serializers.FloatField(default=1.15, min_value=1.0, max_value=1.5, required=False)
+    unsharp_weight = serializers.FloatField(default=1.5, min_value=1.0, max_value=2.0, required=False)
+    gaussian_sigma = serializers.FloatField(default=2.0, min_value=1.0, max_value=3.0, required=False)
+    resize_factor = serializers.FloatField(default=1.2, min_value=1.0, max_value=2.0, required=False)
 
 
     
