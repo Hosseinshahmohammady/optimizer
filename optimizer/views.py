@@ -382,72 +382,56 @@ class OptimizeImageView(APIView):
 
 
     def perspective_correction(self, img):
-        # حفظ کیفیت اصلی تصویر
         result = img.copy()
-        height, width = img.shape[:2]
         
-        # تبدیل به grayscale با حفظ جزئیات
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # پیش‌پردازش تصویر برای تشخیص بهتر پلاک
+        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+        blur = cv2.bilateralFilter(gray, 11, 90, 90)
         
-        # بهبود کنتراست با حفظ جزئیات
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-        gray = clahe.apply(gray)
+        # تشخیص لبه‌ها با حساسیت بالاتر
+        edges = cv2.Canny(blur, 30, 150)
         
-        # نویزگیری هوشمند
-        blur = cv2.bilateralFilter(gray, 11, 17, 17)
-        
-        # تشخیص لبه‌های پلاک
-        edges = cv2.Canny(blur, 30, 200)
-        
-        # یافتن کانتورها
-        contours, _ = cv2.findContours(edges.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # یافتن کانتورهای مستطیلی (احتمالاً پلاک)
+        contours, _ = cv2.findContours(edges.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         contours = sorted(contours, key=cv2.contourArea, reverse=True)[:10]
         
-        plate_contour = None
         for contour in contours:
             perimeter = cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
             
-            if len(approx) == 4:  # پلاک معمولاً 4 گوشه دارد
-                plate_contour = approx
-                break
-        
-        if plate_contour is not None:
-            # تعیین نقاط گوشه پلاک
-            src_points = np.float32(plate_contour.reshape(4, 2))
-            
-            # مرتب‌سازی نقاط گوشه
-            rect = np.zeros((4, 2), dtype="float32")
-            s = src_points.sum(axis=1)
-            rect[0] = src_points[np.argmin(s)]
-            rect[2] = src_points[np.argmax(s)]
-            diff = np.diff(src_points, axis=1)
-            rect[1] = src_points[np.argmin(diff)]
-            rect[3] = src_points[np.argmax(diff)]
-            
-            # تعیین ابعاد پلاک استاندارد
-            (tl, tr, br, bl) = rect
-            widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
-            widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
-            maxWidth = max(int(widthA), int(widthB))
-            
-            heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
-            heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
-            maxHeight = max(int(heightA), int(heightB))
-            
-            dst_points = np.array([
-                [0, 0],
-                [maxWidth - 1, 0],
-                [maxWidth - 1, maxHeight - 1],
-                [0, maxHeight - 1]], dtype="float32")
-            
-            # اعمال تبدیل پرسپکتیو با کیفیت بالا
-            matrix = cv2.getPerspectiveTransform(rect, dst_points)
-            warped = cv2.warpPerspective(result, matrix, (maxWidth, maxHeight))
-            
-            # بهبود نهایی کیفیت
-            warped = cv2.resize(warped, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
-            return warped
+            # بررسی نسبت ابعاد مستطیل برای تشخیص پلاک
+            if len(approx) == 4:
+                x, y, w, h = cv2.boundingRect(approx)
+                aspect_ratio = float(w)/h
+                
+                # نسبت ابعاد استاندارد پلاک ایرانی
+                if 2.0 < aspect_ratio < 5.0:
+                    plate_contour = approx
+                    
+                    # تنظیم نقاط برای تبدیل پرسپکتیو
+                    src_points = np.float32(plate_contour.reshape(4, 2))
+                    width = int(w * 1.2)  # کمی بزرگتر برای اطمینان
+                    height = int(h * 1.2)
+                    
+                    dst_points = np.float32([
+                        [0, 0],
+                        [width, 0],
+                        [width, height],
+                        [0, height]
+                    ])
+                    
+                    # اعمال تبدیل پرسپکتیو با کیفیت بالا
+                    matrix = cv2.getPerspectiveTransform(src_points, dst_points)
+                    warped = cv2.warpPerspective(result, matrix, (width, height))
+                    
+                    # بهبود کیفیت نهایی
+                    warped = cv2.resize(warped, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+                    
+                    # افزایش وضوح
+                    kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+                    warped = cv2.filter2D(warped, -1, kernel)
+                    
+                    return warped
         
         return result
 
