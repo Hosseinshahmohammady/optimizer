@@ -301,25 +301,42 @@ class OptimizeImageView(APIView):
     def curve_detection_function(self, img):
         result = img.copy()
         
-        try:
-            gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-        except cv2.error:
-            return result
-            
-        blur = cv2.GaussianBlur(gray, (7, 7), 1.5)
-        edges = cv2.Canny(blur, 30, 200)
+        # تبدیل به grayscale
+        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
         
+        # افزایش کنتراست تصویر
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        gray = clahe.apply(gray)
+        
+        # نویزگیری پیشرفته
+        blur = cv2.bilateralFilter(gray, 9, 75, 75)
+        
+        # تشخیص لبه با پارامترهای قوی‌تر
+        edges = cv2.Canny(blur, 50, 150, apertureSize=3)
+        
+        # دایلیت کردن لبه‌ها برای اتصال بهتر
+        kernel = np.ones((3,3), np.uint8)
+        edges = cv2.dilate(edges, kernel, iterations=1)
+        
+        # یافتن کانتورها
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
+        # رسم منحنی‌ها
         for contour in contours:
-            if len(contour) > 10: 
+            if len(contour) > 15:  # افزایش حداقل نقاط
                 try:
-                    ellipse = cv2.fitEllipse(contour)
-                    cv2.ellipse(result, ellipse, (0, 255, 0), 3)  
-                except cv2.error:
+                    # محاسبه مساحت کانتور
+                    area = cv2.contourArea(contour)
+                    if area > 100:  # فیلتر کردن کانتورهای کوچک
+                        ellipse = cv2.fitEllipse(contour)
+                        cv2.ellipse(result, ellipse, (0, 255, 0), 4)  # افزایش ضخامت خط
+                        # رسم نقاط کانتور
+                        cv2.drawContours(result, [contour], -1, (255, 0, 0), 2)
+                except:
                     continue
-                    
+        
         return result
+
 
 
     def optimize_parameters_function(self, img):
