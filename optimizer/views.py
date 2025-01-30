@@ -301,41 +301,40 @@ class OptimizeImageView(APIView):
     def curve_detection_function(self, img):
         result = img.copy()
         
-        # تبدیل به grayscale
         gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
         
-        # افزایش کنتراست تصویر
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        gray = clahe.apply(gray)
+        # استفاده از gaussian_kernel از سریالایزر
+        kernel_size = (self.gaussian_kernel, self.gaussian_kernel)
+        blur = cv2.GaussianBlur(gray, kernel_size, 0)
         
-        # نویزگیری پیشرفته
-        blur = cv2.bilateralFilter(gray, 9, 75, 75)
+        # استفاده از آستانه‌های Canny از سریالایزر
+        edges = cv2.Canny(blur, self.canny_threshold1, self.canny_threshold2)
         
-        # تشخیص لبه با پارامترهای قوی‌تر
-        edges = cv2.Canny(blur, 50, 150, apertureSize=3)
-        
-        # دایلیت کردن لبه‌ها برای اتصال بهتر
         kernel = np.ones((3,3), np.uint8)
         edges = cv2.dilate(edges, kernel, iterations=1)
         
-        # یافتن کانتورها
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        # رسم منحنی‌ها
+        found_curves = False  # برای بررسی اینکه آیا منحنی پیدا شده
+        
         for contour in contours:
-            if len(contour) > 15:  # افزایش حداقل نقاط
+            if len(contour) > 15:
                 try:
-                    # محاسبه مساحت کانتور
                     area = cv2.contourArea(contour)
-                    if area > 100:  # فیلتر کردن کانتورهای کوچک
+                    if area > 100:
                         ellipse = cv2.fitEllipse(contour)
-                        cv2.ellipse(result, ellipse, (0, 255, 0), 4)  # افزایش ضخامت خط
-                        # رسم نقاط کانتور
+                        cv2.ellipse(result, ellipse, (0, 255, 0), 4)
                         cv2.drawContours(result, [contour], -1, (255, 0, 0), 2)
+                        found_curves = True
                 except:
                     continue
         
+        # اگر هیچ منحنی پیدا نشد، لاگ بزنیم
+        if not found_curves:
+            logger.info("No curves detected in the image")
+        
         return result
+
 
 
 
@@ -562,9 +561,9 @@ class OptimizeImageView(APIView):
             self.ransac_threshold = serializer.validated_data['ransac_threshold']
             self.min_inliers = serializer.validated_data['min_inliers']
 
-            self.curve_detection = serializer.validated_data.get('curve_detections')
-            self.gaussian_kernel = serializer.validated_data.get('gaussian_kernel')
             self.canny_threshold1 = serializer.validated_data.get('canny_threshold1')
+            self.gaussian_kernel = serializer.validated_data.get('gaussian_kernel')
+            self.canny_threshold1 = serializer.validat
             self.canny_threshold2 = serializer.validated_data.get('canny_threshold2')
 
             self.optimize_parameters = serializer.validated_data.get('optimize_parameters')
