@@ -313,7 +313,7 @@ class OptimizeImageView(APIView):
         for contour in contours:
             if len(contour) > 5:
                 ellipse = cv2.fitEllipse(contour)
-                cv2.ellipse(img, ellipse, (0,255,0), 2)
+                cv2.ellipse(result, ellipse, (0,255,0), 2)
         return result
 
     def optimize_parameters_function(self, img):
