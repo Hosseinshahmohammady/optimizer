@@ -655,7 +655,7 @@ class OptimizeImageView(APIView):
             self.panorama_image = serializer.validated_data.get('panorama_image', False)
             self.combine_images = serializer.validated_data.get('combine_images', False)
 
-            self.identify_features = serializer.validated_data.get['identify_features']
+            self.identify_features = serializer.validated_data.get('identify_features')
 
             self.format_choice = serializer.validated_data.get('format_choice')
             self.quality = serializer.validated_data.get('quality')
