@@ -173,7 +173,10 @@ class OptimizeImageView(APIView):
                 img = cv2.resize(img, None, fx=self.scale_x, fy=self.scale_y, interpolation=cv2.INTER_LINEAR)
 
             if self.identify_features and self.img2 is not None:
+                logger.info("Applying identify features")
                 img = self.identify_features_function(img, self.img2)
+                logger.info("identify features completed")
+
 
             if self.aligned_images and self.img2 is not None:
                 img = self.aligned_images(img, self.img2)
@@ -476,15 +479,13 @@ class OptimizeImageView(APIView):
 
 
     def identify_features_function(self, img1, img2):
-        # تبدیل تصاویر به grayscale
+
         gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
         gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
         
-        # پیش‌پردازش تصاویر
         gray1 = cv2.GaussianBlur(gray1, (5,5), 0)
         gray2 = cv2.GaussianBlur(gray2, (5,5), 0)
         
-        # تنظیم و ایجاد SIFT با پارامترهای بهینه
         sift = cv2.SIFT_create(
             nfeatures=0,
             nOctaveLayers=5,
@@ -492,28 +493,22 @@ class OptimizeImageView(APIView):
             edgeThreshold=10
         )
         
-        # استخراج keypoints و descriptors
         keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
         keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
         
-        # اطمینان از وجود descriptors
         if descriptors1 is None or descriptors2 is None:
             return img1
         
-        # ایجاد matcher و پیدا کردن matches
         bf = cv2.BFMatcher()
         matches = bf.knnMatch(descriptors1, descriptors2, k=2)
         
-        # فیلتر کردن matches خوب با استفاده از نسبت Lowe
         good_matches = []
         for m, n in matches:
             if m.distance < 0.75 * n.distance:
                 good_matches.append(m)
         
-        # مرتب‌سازی matches بر اساس فاصله
         good_matches = sorted(good_matches, key=lambda x: x.distance)[:100]
         
-        # رسم matches روی تصویر
         result = cv2.drawMatches(
             img1, keypoints1,
             img2, keypoints2,
@@ -522,7 +517,6 @@ class OptimizeImageView(APIView):
                 cv2.DrawMatchesFlags_DRAW_RICH_KEYPOINTS
         )
         
-        # افزودن اطلاعات به تصویر
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(result, f'Matches found: {len(good_matches)}', 
                     (10, 30), font, 1, (0, 255, 0), 2)
