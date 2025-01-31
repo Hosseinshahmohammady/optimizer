@@ -173,7 +173,7 @@ class OptimizeImageView(APIView):
                 img = cv2.resize(img, None, fx=self.scale_x, fy=self.scale_y, interpolation=cv2.INTER_LINEAR)
 
             if self.identify_features and self.img2 is not None:
-                img = self.identify_features(img, self.img2)
+                img = self.identify_features_function(img, self.img2)
 
             if self.aligned_images and self.img2 is not None:
                 img = self.aligned_images(img, self.img2)
@@ -475,7 +475,7 @@ class OptimizeImageView(APIView):
 
 
 
-    def identify_features(self, img1, img2):
+    def identify_features_function(self, img1, img2):
         gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
         gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
         sift = cv2.SIFT_create()
@@ -636,9 +636,12 @@ class OptimizeImageView(APIView):
             self.aligned_images = serializer.validated_data.get('aligned_image', False)
             self.panorama_image = serializer.validated_data.get('panorama_image', False)
             self.combine_images = serializer.validated_data.get('combine_images', False)
+
             self.identify_features = serializer.validated_data.get('identify_features', False)
+
             self.format_choice = serializer.validated_data.get('format_choice')
             self.quality = serializer.validated_data.get('quality')
+
             self.perspective_correction = serializer.validated_data.get('perspective_correction', False)
 
             self.kalman_line_detection = serializer.validated_data['kalman_line_detection']

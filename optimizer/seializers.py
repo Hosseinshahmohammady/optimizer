@@ -45,7 +45,7 @@ class ImageUploadSerializer(serializers.Serializer):
     shear_y = serializers.FloatField(required=False, default=0)
 
         # پارامترهای ترکیب تصاویر
-    # Identify_features = serializers.BooleanField(required=False, default=False)
+    Identify_features = serializers.BooleanField(required=False, default=False)
     # aligned_image = serializers.BooleanField(required=False, default=False)
     # combine_images = serializers.BooleanField(required=False, default=False)
     # panorama_image = serializers.BooleanField(required=False, default=False)
