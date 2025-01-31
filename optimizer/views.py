@@ -174,8 +174,6 @@ class OptimizeImageView(APIView):
 
             if self.identify_features and self.img2 is not None:
                 logger.info("شروع پردازش identify_features")
-                logger.info(f"ابعاد تصویر اول: {img.shape}")
-                logger.info(f"ابعاد تصویر دوم: {self.img2.shape}")
                 img = self.identify_features_function(img, self.img2)
 
 
@@ -480,45 +478,31 @@ class OptimizeImageView(APIView):
 
 
     def identify_features_function(self, img1, img2):
-        logger.info("شروع تابع identify_features_function")
-        
-        # تبدیل تصاویر به grayscale
+
         gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
         gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-        logger.info("تبدیل تصاویر به grayscale انجام شد")
         
-        # استخراج keypoints و descriptors
-        sift = cv2.SIFT_create()
+        sift = cv2.SIFT_create(nfeatures=500)
         keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
         keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
-        logger.info(f"تعداد keypoints تصویر اول: {len(keypoints1)}")
-        logger.info(f"تعداد keypoints تصویر دوم: {len(keypoints2)}")
         
-        if descriptors1 is None or descriptors2 is None:
-            logger.error("descriptors پیدا نشد")
-            return img1
-            
-        # ایجاد matcher و پیدا کردن matches
         bf = cv2.BFMatcher()
         matches = bf.knnMatch(descriptors1, descriptors2, k=2)
-        logger.info(f"تعداد matches اولیه: {len(matches)}")
         
         good_matches = []
         for m, n in matches:
-            if m.distance < 0.75 * n.distance:
+            if m.distance < 0.7 * n.distance:
                 good_matches.append(m)
         
-        logger.info(f"تعداد matches خوب: {len(good_matches)}")
+        result = cv2.drawMatches(
+            img1, keypoints1,
+            img2, keypoints2,
+            good_matches[:50], None,
+            flags=cv2.DrawMatchesFlags_DRAW_RICH_KEYPOINTS
+        )
         
-        if len(good_matches) < 4:
-            logger.error("تعداد matches کافی نیست")
-            return img1
-            
-        result = cv2.drawMatches(img1, keypoints1, img2, keypoints2, good_matches, None,
-                            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-        
-        logger.info("پردازش تصویر با موفقیت انجام شد")
         return result
+
 
 
 
