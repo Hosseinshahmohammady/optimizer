@@ -476,17 +476,59 @@ class OptimizeImageView(APIView):
 
 
     def identify_features_function(self, img1, img2):
+        # تبدیل تصاویر به grayscale
         gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
         gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-        sift = cv2.SIFT_create()
+        
+        # پیش‌پردازش تصاویر
+        gray1 = cv2.GaussianBlur(gray1, (5,5), 0)
+        gray2 = cv2.GaussianBlur(gray2, (5,5), 0)
+        
+        # تنظیم و ایجاد SIFT با پارامترهای بهینه
+        sift = cv2.SIFT_create(
+            nfeatures=0,
+            nOctaveLayers=5,
+            contrastThreshold=0.04,
+            edgeThreshold=10
+        )
+        
+        # استخراج keypoints و descriptors
         keypoints1, descriptors1 = sift.detectAndCompute(gray1, None)
         keypoints2, descriptors2 = sift.detectAndCompute(gray2, None)
-        bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
-        matches = bf.match(descriptors1, descriptors2)
-        matches = sorted(matches, key=lambda x:x.distance)[:50]  
-        result = cv2.drawMatches(img1, keypoints1, img2, keypoints2, matches, None, 
-                                flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        
+        # اطمینان از وجود descriptors
+        if descriptors1 is None or descriptors2 is None:
+            return img1
+        
+        # ایجاد matcher و پیدا کردن matches
+        bf = cv2.BFMatcher()
+        matches = bf.knnMatch(descriptors1, descriptors2, k=2)
+        
+        # فیلتر کردن matches خوب با استفاده از نسبت Lowe
+        good_matches = []
+        for m, n in matches:
+            if m.distance < 0.75 * n.distance:
+                good_matches.append(m)
+        
+        # مرتب‌سازی matches بر اساس فاصله
+        good_matches = sorted(good_matches, key=lambda x: x.distance)[:100]
+        
+        # رسم matches روی تصویر
+        result = cv2.drawMatches(
+            img1, keypoints1,
+            img2, keypoints2,
+            good_matches, None,
+            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS | 
+                cv2.DrawMatchesFlags_DRAW_RICH_KEYPOINTS
+        )
+        
+        # افزودن اطلاعات به تصویر
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(result, f'Matches found: {len(good_matches)}', 
+                    (10, 30), font, 1, (0, 255, 0), 2)
+        
         return result
+
 
 
     def aligned_images(self, img1, img2):
