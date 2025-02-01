@@ -22,6 +22,7 @@ from .forms import SignUpForm, LoginForm
 from django.shortcuts import render, redirect
 import pytesseract
 import re
+pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
 
 def home_view(request):
