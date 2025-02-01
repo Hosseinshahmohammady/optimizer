@@ -20,6 +20,9 @@ logger = logging.getLogger(__name__)
 import numpy as np
 from .forms import SignUpForm, LoginForm
 from django.shortcuts import render, redirect
+import pytesseract
+import re
+
 
 def home_view(request):
     return render(request, 'home_optimize.html')
@@ -214,12 +217,51 @@ class OptimizeImageView(APIView):
                 img = self.enhance_image_quality_function(img)
                 logger.info("enhance image quality detection detection")
 
+            
+            if self.detect_numbers:
+                logger.info("Detecting numbers in image")
+                img = self.detect_numbers_function(img)
+                logger.info(f"Detected numbers: {self.detected_numbers}")
+
 
             return img
 
         except Exception as e:
             raise ValueError(f"Error processing image: {str(e)}")
         
+
+    def detect_numbers_function(self, img):
+        """Extract numbers from image using OCR"""
+        result = img.copy()
+        
+        # تبدیل به grayscale
+        gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+        
+        # اعمال threshold برای جداسازی بهتر اعداد
+        thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        
+        # استفاده از Tesseract برای تشخیص متن
+        text = pytesseract.image_to_string(thresh, config='--psm 6')
+        
+        # استخراج اعداد از متن
+        numbers = re.findall(r'\d+', text)
+        numbers = [int(num) for num in numbers]
+        
+        # رسم کادر دور اعداد در تصویر
+        d = pytesseract.image_to_data(thresh, output_type=pytesseract.Output.DICT)
+        n_boxes = len(d['level'])
+        
+        for i in range(n_boxes):
+            if int(d['conf'][i]) > 60:  # اطمینان از صحت تشخیص
+                (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
+                cv2.rectangle(result, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        
+        self.detected_numbers = numbers
+
+        return result
+
+
+
 
     def enhance_image_quality_function(self, img):
         esult = img.copy()
@@ -694,6 +736,10 @@ class OptimizeImageView(APIView):
             self.resize_factor = serializer.validated_data.get('resize_factor', 1.2)
 
 
+            self.detect_numbers = serializer.validated_data.get('detect_numbers', False)
+
+
+
             self.img2 = None
 
             images = self.validate_images(
@@ -720,7 +766,9 @@ class OptimizeImageView(APIView):
             return Response({
                 'message': 'Image optimized and saved',
                 'image_url': image_url,
-                'image_id': f'Enter your browser : http://172.105.38.184:8000/api/pk/'
+                'image_id': f'Enter your browser : http://172.105.38.184:8000/api/pk/',
+                'detected_numbers': self.detected_numbers if hasattr(self, 'detected_numbers') else []
+
             })
 
         except Exception as e:

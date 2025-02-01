@@ -89,7 +89,9 @@ class ImageUploadSerializer(serializers.Serializer):
     resize_factor = serializers.FloatField(default=1.2, min_value=1.0, max_value=2.0, required=False)
 
 
-    
+    detect_numbers = serializers.BooleanField(default=False)
+
+
 
     def validate_quality(self, value):
         if value is None:
