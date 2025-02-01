@@ -22,7 +22,7 @@ from .forms import SignUpForm, LoginForm
 from django.shortcuts import render, redirect
 import pytesseract
 import re
-pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+pytesseract.pytesseract.tesseract_cmd = 'C:\Program Files\Tesseract-OCR'
 
 
 def home_view(request):
