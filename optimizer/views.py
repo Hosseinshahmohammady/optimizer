@@ -1,3 +1,7 @@
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+import re
+
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.http import HttpResponse
@@ -20,9 +24,6 @@ logger = logging.getLogger(__name__)
 import numpy as np
 from .forms import SignUpForm, LoginForm
 from django.shortcuts import render, redirect
-import pytesseract
-import re
-pytesseract.pytesseract.tesseract_cmd = 'C:\Program Files\Tesseract-OCR'
 
 
 def home_view(request):
